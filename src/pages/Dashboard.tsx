@@ -186,7 +186,7 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" angle={-38} textAnchor="end" tick={{ fontSize: 10 }} interval={0} />
                 <YAxis tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: number) => fmt(v)} />
+                <Tooltip formatter={(v) => fmt(v as number)} />
                 <Legend wrapperStyle={{ fontSize: '11px' }} />
                 <Bar dataKey="Ingresos" fill="#00A699" radius={[2, 2, 0, 0]} />
                 <Bar dataKey="Costos"   fill="#FF5A5F" radius={[2, 2, 0, 0]} />
@@ -202,7 +202,7 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={72} />
                 <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: number) => `${v}%`} />
+                <Tooltip formatter={(v) => `${v}%`} />
                 <Bar dataKey="Margen" radius={[0, 3, 3, 0]}>
                   {marginData.map((entry, idx) => (
                     <Cell key={idx} fill={entry.Margen >= 80 ? '#00A699' : '#FC642D'} />

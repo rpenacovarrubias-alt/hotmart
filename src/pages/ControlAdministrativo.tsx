@@ -283,7 +283,7 @@ const ControlAdministrativo = () => {
                       <Cell key={idx} fill={PROP_COLORS[idx % PROP_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => fmt(v)} />
+                  <Tooltip formatter={(v) => fmt(v as number)} />
                   <Legend
                     iconType="circle"
                     iconSize={10}
@@ -317,7 +317,7 @@ const ControlAdministrativo = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" angle={-35} textAnchor="end" tick={{ fontSize: 11 }} />
                 <YAxis tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => fmt(v)} />
+                <Tooltip formatter={(v) => fmt(v as number)} />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar dataKey="Ingresos" fill="#00A699" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Costos"   fill="#FF5A5F" radius={[3, 3, 0, 0]} />
@@ -333,7 +333,7 @@ const ControlAdministrativo = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => fmt(v)} />
+                <Tooltip formatter={(v) => fmt(v as number)} />
                 <Line type="monotone" dataKey="Ingresos" stroke="#00A699" strokeWidth={2.5} dot={{ r: 5, fill: '#00A699' }} activeDot={{ r: 7 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -371,7 +371,7 @@ const ControlAdministrativo = () => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={75} />
                 <XAxis type="number" domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: number) => `${v}%`} />
+                <Tooltip formatter={(v) => `${v}%`} />
                 <Bar dataKey="Margen" radius={[0, 4, 4, 0]}>
                   {marginSorted.map((entry, idx) => (
                     <Cell key={idx} fill={entry.Margen >= 80 ? '#00A699' : '#FC642D'} />

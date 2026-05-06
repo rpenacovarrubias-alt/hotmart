@@ -7,9 +7,9 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
   const [activeTab, setActiveTab] = useState<'config'|'stays'|'report'|'expenses'>('stays');
   const [period, setPeriod] = useState('month');
   
-  const [config, setConfig] = useState<PropertyConfig | undefined>(mockPropertyConfigs.find(c => c.propertyId === propertyId));
-  const [stays, setStays] = useState<Stay[]>(mockStays.filter(s => s.propertyId === propertyId));
-  const [expenses, setExpenses] = useState<ExtraExpense[]>(mockExtraExpenses.filter(e => e.propertyId === propertyId));
+  const [config] = useState<PropertyConfig | undefined>(mockPropertyConfigs.find(c => c.propertyId === propertyId));
+  const [stays] = useState<Stay[]>(mockStays.filter(s => s.propertyId === propertyId));
+  const [expenses] = useState<ExtraExpense[]>(mockExtraExpenses.filter(e => e.propertyId === propertyId));
 
   const now = new Date();
   const filterByDate = (dateStr: string) => {
