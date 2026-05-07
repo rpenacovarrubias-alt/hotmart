@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, MapPin, Trash2 } from 'lucide-react';
+import { Plus, MapPin, Trash2, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import type { Property } from '../types';
@@ -9,7 +9,7 @@ const getInitials = (name: string) =>
   name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
 const Properties = () => {
-  const { properties, addProperty, openDeleteModal } = useApp();
+  const { properties, addProperty, openDeleteModal, openEditModal } = useApp();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const Properties = () => {
             className="property-card"
             onClick={() => navigate(`/propiedades/${property.id}`)}
           >
-            {/* Image / placeholder with delete overlay */}
+            {/* Image / placeholder with action overlays */}
             <div style={{ position: 'relative' }}>
               {property.imageUrl ? (
                 <img src={property.imageUrl} alt={property.name} className="property-image" />
@@ -44,21 +44,32 @@ const Properties = () => {
                 </div>
               )}
 
-              {/* Inline trash icon */}
+              {/* Edit icon */}
               <button
                 style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '8px',
-                  background: 'rgba(0,0,0,0.55)',
-                  border: 'none',
-                  borderRadius: '7px',
-                  padding: '7px',
-                  cursor: 'pointer',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  transition: 'background 0.2s',
+                  position: 'absolute', top: '8px', right: '44px',
+                  background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '7px',
+                  padding: '7px', cursor: 'pointer', color: 'white',
+                  display: 'flex', alignItems: 'center', transition: 'background 0.2s',
+                }}
+                onClick={e => {
+                  e.stopPropagation();
+                  openEditModal({ category: 'propiedad', itemId: property.id });
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(107,91,255,0.85)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.55)'; }}
+                title="Editar propiedad"
+              >
+                <Pencil size={14} />
+              </button>
+
+              {/* Delete icon */}
+              <button
+                style={{
+                  position: 'absolute', top: '8px', right: '8px',
+                  background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '7px',
+                  padding: '7px', cursor: 'pointer', color: 'white',
+                  display: 'flex', alignItems: 'center', transition: 'background 0.2s',
                 }}
                 onClick={e => {
                   e.stopPropagation();

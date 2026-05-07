@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { Plus, TrendingDown, Trash2 } from 'lucide-react';
+import { Plus, TrendingDown, Trash2, Pencil } from 'lucide-react';
 import { mockStays } from '../data/mockData';
 import { useApp } from '../context/AppContext';
 import type { Expense, Stay } from '../types';
 import AddExpenseModal from '../components/AddExpenseModal';
 
 const categoryDisplay: Record<string, string> = {
-  cleaning:      'Limpieza',
-  maintenance:   'Mantenimiento',
-  supplies:      'Insumos',
-  platform_fee:  'Comisión Plataforma',
-  utilities:     'Servicios',
-  repairs:       'Reparaciones',
-  other:         'Otros',
+  cleaning:     'Limpieza',
+  maintenance:  'Mantenimiento',
+  supplies:     'Insumos',
+  platform_fee: 'Comisión Plataforma',
+  utilities:    'Servicios',
+  repairs:      'Reparaciones',
+  other:        'Otros',
+};
+
+const actionBtn: React.CSSProperties = {
+  background: 'none', border: 'none', cursor: 'pointer',
+  color: 'var(--text-muted)', padding: '6px', borderRadius: '6px',
+  display: 'flex', alignItems: 'center', transition: 'color 0.15s, background 0.15s',
 };
 
 const Finances = () => {
-  const { expenses, addExpense, openDeleteModal, properties } = useApp();
+  const { expenses, addExpense, openDeleteModal, openEditModal, properties } = useApp();
   const [activeTab, setActiveTab] = useState(1);
   const [stays] = useState<Stay[]>(mockStays);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -104,34 +110,45 @@ const Finances = () => {
                       </td>
                       <td style={{ padding: '16px 20px', color: 'var(--text-muted)' }}>{expense.description}</td>
                       <td style={{ padding: '16px 20px', fontWeight: 600, color: 'var(--warning)' }}>-${expense.amount.toFixed(2)}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <button
-                          onClick={() => openDeleteModal({ category: 'gasto', itemId: expense.id })}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--text-muted)',
-                            padding: '6px',
-                            borderRadius: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            transition: 'color 0.15s, background 0.15s',
-                          }}
-                          onMouseEnter={e => {
-                            const b = e.currentTarget as HTMLButtonElement;
-                            b.style.color = '#EF4444';
-                            b.style.background = 'rgba(239,68,68,0.08)';
-                          }}
-                          onMouseLeave={e => {
-                            const b = e.currentTarget as HTMLButtonElement;
-                            b.style.color = 'var(--text-muted)';
-                            b.style.background = 'none';
-                          }}
-                          title="Eliminar gasto"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                      <td style={{ padding: '12px 12px' }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          {/* Edit button */}
+                          <button
+                            style={actionBtn}
+                            onClick={() => openEditModal({ category: 'gasto', itemId: expense.id })}
+                            onMouseEnter={e => {
+                              const b = e.currentTarget as HTMLButtonElement;
+                              b.style.color = '#6B5BFF';
+                              b.style.background = 'rgba(107,91,255,0.08)';
+                            }}
+                            onMouseLeave={e => {
+                              const b = e.currentTarget as HTMLButtonElement;
+                              b.style.color = 'var(--text-muted)';
+                              b.style.background = 'none';
+                            }}
+                            title="Editar gasto"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          {/* Delete button */}
+                          <button
+                            style={actionBtn}
+                            onClick={() => openDeleteModal({ category: 'gasto', itemId: expense.id })}
+                            onMouseEnter={e => {
+                              const b = e.currentTarget as HTMLButtonElement;
+                              b.style.color = '#EF4444';
+                              b.style.background = 'rgba(239,68,68,0.08)';
+                            }}
+                            onMouseLeave={e => {
+                              const b = e.currentTarget as HTMLButtonElement;
+                              b.style.color = 'var(--text-muted)';
+                              b.style.background = 'none';
+                            }}
+                            title="Eliminar gasto"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import { mockProperties, mockTasks, mockExpenses, mockAdminControl } from '../data/mockData';
 import type { Property, Task, TaskStatus, Expense, AdminControlRecord } from '../types';
 
+// ── Delete modal ──────────────────────────────────────────────────────────────
 export type DeleteCategory = 'propiedad' | 'gasto' | 'tarea' | 'reporte';
 
 export interface DeletePreselect {
@@ -10,85 +11,137 @@ export interface DeletePreselect {
   fromInline: boolean;
 }
 
+// ── Edit modal ────────────────────────────────────────────────────────────────
+export type EditCategory = 'propiedad' | 'gasto' | 'tarea' | 'reporte';
+
+export interface EditPreselect {
+  category: EditCategory;
+  itemId: string;
+}
+
+// ── Context type ──────────────────────────────────────────────────────────────
 interface AppContextType {
-  // ── Data ──────────────────────────────────────────────
+  // Data
   properties: Property[];
   tasks: Task[];
   expenses: Expense[];
   adminRecords: AdminControlRecord[];
 
-  // ── Property ops ──────────────────────────────────────
+  // Property ops
   addProperty: (p: Property) => void;
+  updateProperty: (p: Property) => void;
   deleteProperty: (id: string) => void;
 
-  // ── Task ops ──────────────────────────────────────────
+  // Task ops
   addTask: (t: Task) => void;
+  updateTask: (t: Task) => void;
   moveTask: (taskId: string, newStatus: TaskStatus) => void;
   deleteTask: (id: string) => void;
 
-  // ── Expense ops ───────────────────────────────────────
+  // Expense ops
   addExpense: (e: Expense) => void;
+  updateExpense: (e: Expense) => void;
   deleteExpense: (id: string) => void;
 
-  // ── Admin-record ops ──────────────────────────────────
+  // Admin-record ops
+  updateAdminRecord: (r: AdminControlRecord) => void;
   deleteAdminRecord: (id: string) => void;
 
-  // ── Delete modal ──────────────────────────────────────
+  // Delete modal
   deleteModalOpen: boolean;
   deleteModalPreselect: DeletePreselect | null;
   openDeleteModal: (preselect?: Omit<DeletePreselect, 'fromInline'>) => void;
   closeDeleteModal: () => void;
+
+  // Edit modal
+  editModalOpen: boolean;
+  editModalPreselect: EditPreselect | null;
+  openEditModal: (preselect?: EditPreselect) => void;
+  closeEditModal: () => void;
+
+  // Toast
+  toast: string | null;
+  showToast: (message: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [properties, setProperties]   = useState<Property[]>(mockProperties);
-  const [tasks, setTasks]             = useState<Task[]>(mockTasks);
-  const [expenses, setExpenses]       = useState<Expense[]>(mockExpenses);
+  const [properties, setProperties]     = useState<Property[]>(mockProperties);
+  const [tasks, setTasks]               = useState<Task[]>(mockTasks);
+  const [expenses, setExpenses]         = useState<Expense[]>(mockExpenses);
   const [adminRecords, setAdminRecords] = useState<AdminControlRecord[]>(mockAdminControl);
 
-  const [deleteModalOpen, setDeleteModalOpen]         = useState(false);
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen]           = useState(false);
   const [deleteModalPreselect, setDeleteModalPreselect] = useState<DeletePreselect | null>(null);
 
-  // Property
-  const addProperty    = (p: Property)  => setProperties(prev => [...prev, p]);
-  const deleteProperty = (id: string)   => setProperties(prev => prev.filter(p => p.id !== id));
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen]           = useState(false);
+  const [editModalPreselect, setEditModalPreselect] = useState<EditPreselect | null>(null);
 
-  // Task
-  const addTask  = (t: Task)                              => setTasks(prev => [t, ...prev]);
-  const moveTask = (taskId: string, newStatus: TaskStatus) =>
+  // Toast state
+  const [toast, setToast] = useState<string | null>(null);
+
+  // ── Property ──────────────────────────────────────────────────────────────
+  const addProperty    = (p: Property) => setProperties(prev => [...prev, p]);
+  const updateProperty = (p: Property) => setProperties(prev => prev.map(x => x.id === p.id ? p : x));
+  const deleteProperty = (id: string)  => setProperties(prev => prev.filter(p => p.id !== id));
+
+  // ── Task ─────────────────────────────────────────────────────────────────
+  const addTask    = (t: Task) => setTasks(prev => [t, ...prev]);
+  const updateTask = (t: Task) => setTasks(prev => prev.map(x => x.id === t.id ? t : x));
+  const moveTask   = (taskId: string, newStatus: TaskStatus) =>
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
   const deleteTask = (id: string) => setTasks(prev => prev.filter(t => t.id !== id));
 
-  // Expense
+  // ── Expense ───────────────────────────────────────────────────────────────
   const addExpense    = (e: Expense) => setExpenses(prev => [e, ...prev]);
+  const updateExpense = (e: Expense) => setExpenses(prev => prev.map(x => x.id === e.id ? e : x));
   const deleteExpense = (id: string) => setExpenses(prev => prev.filter(e => e.id !== id));
 
-  // Admin record
+  // ── Admin record ──────────────────────────────────────────────────────────
+  const updateAdminRecord = (r: AdminControlRecord) =>
+    setAdminRecords(prev => prev.map(x => x.id === r.id ? r : x));
   const deleteAdminRecord = (id: string) =>
     setAdminRecords(prev => prev.filter(r => r.id !== id));
 
-  // Modal
+  // ── Delete modal ──────────────────────────────────────────────────────────
   const openDeleteModal = (preselect?: Omit<DeletePreselect, 'fromInline'>) => {
     setDeleteModalPreselect(preselect ? { ...preselect, fromInline: true } : null);
     setDeleteModalOpen(true);
   };
-
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setDeleteModalPreselect(null);
   };
 
+  // ── Edit modal ────────────────────────────────────────────────────────────
+  const openEditModal = (preselect?: EditPreselect) => {
+    setEditModalPreselect(preselect ?? null);
+    setEditModalOpen(true);
+  };
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditModalPreselect(null);
+  };
+
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   return (
     <AppContext.Provider value={{
       properties, tasks, expenses, adminRecords,
-      addProperty, deleteProperty,
-      addTask, moveTask, deleteTask,
-      addExpense, deleteExpense,
-      deleteAdminRecord,
-      deleteModalOpen, deleteModalPreselect,
-      openDeleteModal, closeDeleteModal,
+      addProperty, updateProperty, deleteProperty,
+      addTask, updateTask, moveTask, deleteTask,
+      addExpense, updateExpense, deleteExpense,
+      updateAdminRecord, deleteAdminRecord,
+      deleteModalOpen, deleteModalPreselect, openDeleteModal, closeDeleteModal,
+      editModalOpen, editModalPreselect, openEditModal, closeEditModal,
+      toast, showToast,
     }}>
       {children}
     </AppContext.Provider>

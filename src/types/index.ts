@@ -136,4 +136,7 @@ export interface AdminControlRecord {
   total_cost: number;
   profit: number;
   margin_percent: number;
+  reportLabel?: string;
+  notes?: string;
+  periodType?: 'Semanal' | 'Mensual' | 'Trimestral' | 'Anual';
 }

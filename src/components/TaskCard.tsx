@@ -1,4 +1,4 @@
-import { Calendar, User, Camera, ArrowRight, CheckCircle, Trash2 } from 'lucide-react';
+import { Calendar, User, Camera, ArrowRight, CheckCircle, Trash2, Pencil } from 'lucide-react';
 import type { Task, TaskStatus } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -8,14 +8,20 @@ interface TaskCardProps {
 }
 
 const TYPE_CLASS: Record<string, string> = {
-  Limpieza:     'limpieza',
+  Limpieza:      'limpieza',
   Mantenimiento: 'mantenimiento',
-  'Revisión':   'revision',
-  Otro:         'otro',
+  'Revisión':    'revision',
+  Otro:          'otro',
+};
+
+const iconBtn: React.CSSProperties = {
+  position: 'absolute', background: 'none', border: 'none', cursor: 'pointer',
+  color: 'var(--text-muted)', padding: '4px', borderRadius: '5px',
+  display: 'flex', alignItems: 'center', transition: 'color 0.15s, background 0.15s',
 };
 
 const TaskCard = ({ task, onMove }: TaskCardProps) => {
-  const { openDeleteModal } = useApp();
+  const { openDeleteModal, openEditModal } = useApp();
 
   const getNextStatus = (current: TaskStatus): TaskStatus | null => {
     if (current === 'Pendiente') return 'En Progreso';
@@ -28,23 +34,30 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
 
   return (
     <div className="task-card" style={{ position: 'relative' }}>
-      {/* Inline trash icon */}
+
+      {/* Edit icon */}
+      <button
+        onClick={() => openEditModal({ category: 'tarea', itemId: task.id })}
+        style={{ ...iconBtn, top: '10px', right: '42px' }}
+        onMouseEnter={e => {
+          const b = e.currentTarget as HTMLButtonElement;
+          b.style.color = '#6B5BFF';
+          b.style.background = 'rgba(107,91,255,0.08)';
+        }}
+        onMouseLeave={e => {
+          const b = e.currentTarget as HTMLButtonElement;
+          b.style.color = 'var(--text-muted)';
+          b.style.background = 'none';
+        }}
+        title="Editar tarea"
+      >
+        <Pencil size={13} />
+      </button>
+
+      {/* Delete icon */}
       <button
         onClick={() => openDeleteModal({ category: 'tarea', itemId: task.id })}
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: 'var(--text-muted)',
-          padding: '4px',
-          borderRadius: '5px',
-          display: 'flex',
-          alignItems: 'center',
-          transition: 'color 0.15s, background 0.15s',
-        }}
+        style={{ ...iconBtn, top: '10px', right: '10px' }}
         onMouseEnter={e => {
           const b = e.currentTarget as HTMLButtonElement;
           b.style.color = '#EF4444';
@@ -61,20 +74,15 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
       </button>
 
       {/* Type badge + Urgente pill */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingRight: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingRight: '68px' }}>
         <div className={`task-type type-${typeClass}`} style={{ marginBottom: 0 }}>
           {task.type}
         </div>
         {task.priority === 'Urgente' && (
           <span style={{
-            background: 'rgba(255, 90, 95, 0.12)',
-            color: 'var(--primary)',
-            fontSize: '10px',
-            fontWeight: 700,
-            padding: '2px 7px',
-            borderRadius: '4px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.4px',
+            background: 'rgba(255, 90, 95, 0.12)', color: 'var(--primary)',
+            fontSize: '10px', fontWeight: 700, padding: '2px 7px',
+            borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.4px',
           }}>
             Urgente
           </span>
@@ -110,18 +118,9 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
         {task.status !== 'Completado' && (
           <button
             style={{
-              flex: 1,
-              background: 'var(--bg-color)',
-              border: 'none',
-              padding: '8px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              fontSize: '12px',
-              fontWeight: 600,
+              flex: 1, background: 'var(--bg-color)', border: 'none', padding: '8px',
+              borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', gap: '6px', fontSize: '12px', fontWeight: 600,
               color: 'var(--text-main)',
             }}
             onClick={() => nextStatus && onMove(task.id, nextStatus)}
@@ -133,14 +132,7 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
 
         {task.status === 'En Progreso' && (
           <button
-            style={{
-              background: 'rgba(0, 166, 153, 0.1)',
-              border: 'none',
-              padding: '8px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              color: 'var(--success)',
-            }}
+            style={{ background: 'rgba(0, 166, 153, 0.1)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', color: 'var(--success)' }}
             title="Subir evidencia"
           >
             <Camera size={16} />
