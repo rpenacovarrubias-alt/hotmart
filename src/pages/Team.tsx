@@ -45,6 +45,7 @@ const Team = () => {
   const [form, setForm]                 = useState<UserForm>(DEFAULT_FORM);
   const [errors, setErrors]             = useState<Record<string, string>>({});
   const [avatarPhotoMode, setAvatarPhotoMode] = useState<'url' | 'upload'>('url');
+  const [preloadPropertyId, setPreloadPropertyId] = useState<string>('');
 
   const filteredUsers = roleFilter === 'all' ? users : users.filter(u => u.role === roleFilter);
 
@@ -53,6 +54,7 @@ const Team = () => {
     setForm(DEFAULT_FORM);
     setErrors({});
     setAvatarPhotoMode('url');
+    setPreloadPropertyId('');
     setAddModalOpen(true);
   };
 
@@ -68,6 +70,7 @@ const Team = () => {
     });
     setErrors({});
     setAvatarPhotoMode('url');
+    setPreloadPropertyId('');
     setEditingUser(user);
   };
 
@@ -76,6 +79,7 @@ const Team = () => {
     setEditingUser(null);
     setForm(DEFAULT_FORM);
     setErrors({});
+    setPreloadPropertyId('');
   };
 
   // ── Validation ───────────────────────────────────────────────────────────────
@@ -133,6 +137,23 @@ const Team = () => {
     }));
   };
 
+  // ── Pre-load host data from existing property ─────────────────────────────
+  const handlePreloadFromProperty = (propId: string) => {
+    setPreloadPropertyId(propId);
+    if (!propId) return;
+    const prop = properties.find(p => p.id === propId);
+    if (!prop) return;
+    setForm(f => ({
+      ...f,
+      name:  prop.hostName  || f.name,
+      email: prop.hostEmail || f.email,
+      phone: prop.hostPhone || f.phone,
+      propertyAccess: f.propertyAccess.includes(prop.id)
+        ? f.propertyAccess
+        : [...f.propertyAccess, prop.id],
+    }));
+  };
+
   // ── File upload → base64 ─────────────────────────────────────────────────────
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,7 +166,7 @@ const Team = () => {
   };
 
   // ── Shared form ──────────────────────────────────────────────────────────────
-  const renderForm = (onSave: () => void, saveLabel: string) => (
+  const renderForm = (onSave: () => void, saveLabel: string, isAdding: boolean) => (
     <div className="modal-body" style={{ display: 'grid', gap: '16px' }}>
 
       {/* Name */}
@@ -192,7 +213,15 @@ const Team = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Rol</label>
-          <select style={inp} value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as UserRole }))}>
+          <select
+            style={inp}
+            value={form.role}
+            onChange={e => {
+              const r = e.target.value as UserRole;
+              setForm(f => ({ ...f, role: r }));
+              if (r !== 'host') setPreloadPropertyId('');
+            }}
+          >
             <option value="admin">Administrador</option>
             <option value="manager">Gerente</option>
             <option value="host">Anfitrión</option>
@@ -208,6 +237,30 @@ const Team = () => {
           </select>
         </div>
       </div>
+
+      {/* Pre-load from property — only when role=host and in add modal */}
+      {isAdding && form.role === 'host' && properties.length > 0 && (
+        <div style={{ background: 'rgba(0, 166, 153, 0.06)', border: '1.5px solid rgba(0, 166, 153, 0.25)', borderRadius: '10px', padding: '14px' }}>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#00A699' }}>
+            Pre-cargar datos desde propiedad existente
+          </label>
+          <select
+            style={{ ...inp, borderColor: 'rgba(0, 166, 153, 0.4)' }}
+            value={preloadPropertyId}
+            onChange={e => handlePreloadFromProperty(e.target.value)}
+          >
+            <option value="">— Seleccionar propiedad (opcional) —</option>
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>{p.name} — {p.hostName}</option>
+            ))}
+          </select>
+          {preloadPropertyId && (
+            <p style={{ fontSize: '12px', color: '#00A699', marginTop: '6px' }}>
+              ✓ Nombre, email y teléfono del anfitrión pre-cargados. Puedes editarlos antes de guardar.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Property access */}
       <div>
@@ -450,7 +503,7 @@ const Team = () => {
               <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Agregar Usuario</h3>
               <button className="modal-close" onClick={closeModals}><X size={24} /></button>
             </div>
-            {renderForm(handleSaveAdd, 'Guardar Usuario')}
+            {renderForm(handleSaveAdd, 'Guardar Usuario', true)}
           </div>
         </div>
       )}
@@ -463,7 +516,7 @@ const Team = () => {
               <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Editar Usuario</h3>
               <button className="modal-close" onClick={closeModals}><X size={24} /></button>
             </div>
-            {renderForm(handleSaveEdit, 'Guardar Cambios')}
+            {renderForm(handleSaveEdit, 'Guardar Cambios', false)}
           </div>
         </div>
       )}
