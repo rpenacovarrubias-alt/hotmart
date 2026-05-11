@@ -23,6 +23,8 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
   // ── Tabs & period ─────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<'config' | 'stays' | 'report' | 'expenses'>('stays');
   const [period, setPeriod]       = useState('month');
+  const [dateFrom, setDateFrom]   = useState('');
+  const [dateTo, setDateTo]       = useState('');
 
   // ── Core data ─────────────────────────────────────────────────────────────
   const [config] = useState<PropertyConfig | undefined>(
@@ -51,6 +53,11 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
     if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     if (period === 'week')  { const diff = (now.getTime() - d.getTime()) / (1000 * 3600 * 24); return diff >= 0 && diff <= 7; }
     if (period === 'today') return d.toDateString() === now.toDateString();
+    if (period === 'range') {
+      if (dateFrom) { const from = new Date(dateFrom); if (d < from) return false; }
+      if (dateTo)   { const to = new Date(dateTo); to.setHours(23, 59, 59, 999); if (d > to) return false; }
+      return true;
+    }
     return true;
   };
 
@@ -195,15 +202,62 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
   return (
     <div style={{ marginTop: '32px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Control Financiero</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {['month', 'week', 'today', 'custom'].map((p, i) => (
-            <button key={p} className="btn-outline" onClick={() => setPeriod(p)} style={{ padding: '6px 12px', fontSize: '12px', background: period === p ? 'var(--primary)' : '', color: period === p ? 'white' : '' }}>
-              {['Este mes', 'Semana actual', 'Hoy', 'Todo Histórico'][i]}
-            </button>
-          ))}
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Control Financiero</h3>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {(['month', 'week', 'today', 'custom', 'range'] as const).map((p, i) => (
+              <button
+                key={p}
+                className="btn-outline"
+                onClick={() => setPeriod(p)}
+                style={{ padding: '6px 12px', fontSize: '12px', background: period === p ? 'var(--primary)' : '', color: period === p ? 'white' : '' }}
+              >
+                {['Este mes', 'Semana actual', 'Hoy', 'Todo Histórico', 'Rango personalizado'][i]}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Custom date range inputs */}
+        {period === 'range' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+            background: 'rgba(0, 112, 243, 0.05)', border: '1.5px solid rgba(0, 112, 243, 0.18)',
+            borderRadius: '10px', padding: '12px 16px',
+          }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+              Rango:
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Desde</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', fontFamily: 'inherit', outline: 'none' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: '13px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Hasta</label>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={e => setDateTo(e.target.value)}
+                style={{ padding: '6px 10px', borderRadius: '8px', border: '1.5px solid var(--border-color)', fontSize: '13px', fontFamily: 'inherit', outline: 'none' }}
+              />
+            </div>
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(''); setDateTo(''); }}
+                style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
+              >
+                × Limpiar
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
