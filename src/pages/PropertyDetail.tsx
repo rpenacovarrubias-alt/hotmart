@@ -7,7 +7,7 @@ import FinancialControl from '../components/FinancialControl';
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { properties, tasks, openEditModal } = useApp();
+  const { properties, tasks } = useApp();
 
   const property = properties.find(p => p.id === id);
 
@@ -30,7 +30,7 @@ const PropertyDetail = () => {
         </div>
         <button
           className="btn-outline"
-          onClick={() => openEditModal({ category: 'propiedad', itemId: id! })}
+          onClick={() => navigate(`/propiedades/${id}/editar`)}
         >
           Editar Propiedad
         </button>

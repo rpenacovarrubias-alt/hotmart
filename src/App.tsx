@@ -7,6 +7,7 @@ import Toast from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
+import PropertyEdit from './pages/PropertyEdit';
 import Tasks from './pages/Tasks';
 import Finances from './pages/Finances';
 import Reports from './pages/Reports';
@@ -25,6 +26,7 @@ const AppContent = () => {
             <Route path="/"                         element={<Dashboard />} />
             <Route path="/propiedades"              element={<Properties />} />
             <Route path="/propiedades/:id"          element={<PropertyDetail />} />
+            <Route path="/propiedades/:id/editar"   element={<PropertyEdit />} />
             <Route path="/tareas"                   element={<Tasks />} />
             <Route path="/finanzas"                 element={<Finances />} />
             <Route path="/inventario"               element={<div>Módulo de Inventario en construcción...</div>} />
