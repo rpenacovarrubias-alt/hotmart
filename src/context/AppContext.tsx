@@ -123,8 +123,26 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // ── Task ─────────────────────────────────────────────────────────────────
   const addTask    = (t: Task) => setTasks(prev => [t, ...prev]);
   const updateTask = (t: Task) => setTasks(prev => prev.map(x => x.id === t.id ? t : x));
-  const moveTask   = (taskId: string, newStatus: TaskStatus) =>
+  const moveTask   = (taskId: string, newStatus: TaskStatus) => {
+    const task = tasks.find(t => t.id === taskId);
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    if (task && newStatus === 'Completado' && task.status !== 'Completado' && task.cost && task.cost > 0) {
+      const catMap: Record<string, Expense['category']> = {
+        Limpieza: 'cleaning', Mantenimiento: 'maintenance', 'Revisión': 'maintenance',
+      };
+      const expense: Expense = {
+        id: `exp_task_${taskId}_${Date.now()}`,
+        propertyId: task.propertyId,
+        category: catMap[task.type] ?? 'other',
+        description: `[Tarea] ${task.title}`,
+        amount: task.cost,
+        date: new Date().toISOString().split('T')[0],
+        createdBy: task.assignedTo,
+        createdAt: new Date().toISOString(),
+      };
+      setExpenses(prev => [expense, ...prev]);
+    }
+  };
   const deleteTask = (id: string) => setTasks(prev => prev.filter(t => t.id !== id));
 
   // ── Expense ───────────────────────────────────────────────────────────────

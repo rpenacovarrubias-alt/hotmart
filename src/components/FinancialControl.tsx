@@ -1,15 +1,16 @@
 import { useState, useMemo } from 'react';
 import { Download, FileText, Plus, Save } from 'lucide-react';
-import { mockPropertyConfigs, mockStays, mockExtraExpenses } from '../data/mockData';
-import type { Stay, ExtraExpense, PropertyConfig } from '../types';
+import { mockPropertyConfigs, mockStays } from '../data/mockData';
+import { useApp } from '../context/AppContext';
+import type { Stay, PropertyConfig } from '../types';
 
 export default function FinancialControl({ propertyId }: { propertyId: string }) {
+  const { expenses: contextExpenses } = useApp();
   const [activeTab, setActiveTab] = useState<'config'|'stays'|'report'|'expenses'>('stays');
   const [period, setPeriod] = useState('month');
-  
+
   const [config] = useState<PropertyConfig | undefined>(mockPropertyConfigs.find(c => c.propertyId === propertyId));
-  const [stays] = useState<Stay[]>(mockStays.filter(s => s.propertyId === propertyId));
-  const [expenses] = useState<ExtraExpense[]>(mockExtraExpenses.filter(e => e.propertyId === propertyId));
+  const [stays]  = useState<Stay[]>(mockStays.filter(s => s.propertyId === propertyId));
 
   const now = new Date();
   const filterByDate = (dateStr: string) => {
@@ -23,8 +24,8 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
     return true;
   };
 
-  const filteredStays = stays.filter(s => filterByDate(s.date));
-  const filteredExpenses = expenses.filter(e => filterByDate(e.date));
+  const filteredStays    = stays.filter(s => filterByDate(s.date));
+  const filteredExpenses = contextExpenses.filter(e => e.propertyId === propertyId && filterByDate(e.date));
 
   const handleConfigSave = (e: React.FormEvent) => {
     e.preventDefault();

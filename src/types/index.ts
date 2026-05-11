@@ -42,6 +42,7 @@ export interface Task {
   date: string;
   photos: string[];
   priority?: 'Normal' | 'Urgente';
+  cost?: number;
 }
 
 export type UserRole = 'admin' | 'manager' | 'host' | 'cleaning_staff' | 'maintenance_staff';

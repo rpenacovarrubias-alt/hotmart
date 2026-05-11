@@ -21,6 +21,7 @@ type ExpForm = {
 type TaskForm = {
   title: string; type: TaskType; propertyId: string; description: string;
   assignedTo: string; date: string; priority: 'Normal' | 'Urgente'; status: TaskStatus;
+  cost: string;
 };
 
 type RepForm = {
@@ -59,7 +60,7 @@ const DEFAULT_EXP: ExpForm = {
 };
 const DEFAULT_TASK: TaskForm = {
   title: '', type: 'Limpieza', propertyId: '', description: '',
-  assignedTo: '', date: '', priority: 'Normal', status: 'Pendiente',
+  assignedTo: '', date: '', priority: 'Normal', status: 'Pendiente', cost: '',
 };
 const DEFAULT_REP: RepForm = {
   reportLabel: '', period: '', property_id: '', notes: '', periodType: 'Mensual',
@@ -83,7 +84,7 @@ const staff = mockUsers.filter(u => u.role === 'cleaning_staff' || u.role === 'm
 const EditModal = () => {
   const {
     properties, tasks, expenses, adminRecords,
-    updateProperty, updateTask, updateExpense, updateAdminRecord,
+    updateProperty, updateTask, updateExpense, updateAdminRecord, addExpense,
     editModalPreselect, closeEditModal, showToast,
   } = useApp();
 
@@ -127,6 +128,7 @@ const EditModal = () => {
         title: t.title, type: t.type, propertyId: t.propertyId,
         description: t.description, assignedTo: t.assignedTo,
         date: t.date, priority: t.priority ?? 'Normal', status: t.status,
+        cost: t.cost != null ? String(t.cost) : '',
       });
     } else if (category === 'reporte') {
       const r = adminRecords.find(x => x.id === selectedId);
@@ -249,12 +251,30 @@ const EditModal = () => {
       if (Object.keys(errs).length) { setErrors(errs); return; }
       const base = tasks.find(t => t.id === selectedId)!;
       const derivedTitle = taskForm.title.trim() || `${taskForm.type} – ${propName(taskForm.propertyId)}`;
+      const parsedCost = parseFloat(taskForm.cost);
+      const newCost = !isNaN(parsedCost) && parsedCost > 0 ? parsedCost : undefined;
       updateTask({
         ...base,
         title: derivedTitle, type: taskForm.type, propertyId: taskForm.propertyId,
         description: taskForm.description.trim(), assignedTo: taskForm.assignedTo,
         date: taskForm.date, priority: taskForm.priority, status: taskForm.status,
+        cost: newCost,
       });
+      if (taskForm.status === 'Completado' && base.status !== 'Completado' && newCost && newCost > 0) {
+        const catMap: Record<string, import('../types').ExpenseCategory> = {
+          Limpieza: 'cleaning', Mantenimiento: 'maintenance', 'Revisión': 'maintenance',
+        };
+        addExpense({
+          id: `exp_task_${selectedId}_${Date.now()}`,
+          propertyId: taskForm.propertyId,
+          category: catMap[taskForm.type] ?? 'other',
+          description: `[Tarea] ${derivedTitle}`,
+          amount: newCost,
+          date: new Date().toISOString().split('T')[0],
+          createdBy: taskForm.assignedTo,
+          createdAt: new Date().toISOString(),
+        });
+      }
       showToast(`${derivedTitle} actualizada correctamente`);
 
     } else if (category === 'reporte') {
@@ -567,14 +587,22 @@ const EditModal = () => {
         </div>
       </div>
 
-      <div style={field}>
-        <label style={lbl}>Estado</label>
-        <select style={inp()} value={taskForm.status}
-          onChange={e => setTaskForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
-          <option value="Pendiente">Pendiente</option>
-          <option value="En Progreso">En Progreso</option>
-          <option value="Completado">Completado</option>
-        </select>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', ...field }}>
+        <div>
+          <label style={lbl}>Estado</label>
+          <select style={inp()} value={taskForm.status}
+            onChange={e => setTaskForm(f => ({ ...f, status: e.target.value as TaskStatus }))}>
+            <option value="Pendiente">Pendiente</option>
+            <option value="En Progreso">En Progreso</option>
+            <option value="Completado">Completado</option>
+          </select>
+        </div>
+        <div>
+          <label style={lbl}>Costo (MXN)</label>
+          <input type="number" min={0} step={0.01} style={inp()} value={taskForm.cost}
+            onChange={e => setTaskForm(f => ({ ...f, cost: e.target.value }))}
+            placeholder="0.00" />
+        </div>
       </div>
     </>
   );

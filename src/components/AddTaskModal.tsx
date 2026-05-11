@@ -11,13 +11,14 @@ interface Props {
 const TASK_TYPES: TaskType[] = ['Limpieza', 'Mantenimiento', 'Revisión', 'Otro'];
 
 const AddTaskModal = ({ onAdd, onClose }: Props) => {
-  const [type, setType] = useState<TaskType>('Limpieza');
+  const [type, setType]         = useState<TaskType>('Limpieza');
   const [propertyId, setPropertyId] = useState('');
   const [description, setDescription] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
-  const [date, setDate] = useState('');
-  const [priority, setPriority] = useState<'Normal' | 'Urgente'>('Normal');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [assignedTo, setAssignedTo]   = useState('');
+  const [date, setDate]           = useState('');
+  const [priority, setPriority]   = useState<'Normal' | 'Urgente'>('Normal');
+  const [cost, setCost]           = useState('');
+  const [errors, setErrors]       = useState<Record<string, string>>({});
 
   const staff = mockUsers.filter(
     u => u.role === 'cleaning_staff' || u.role === 'maintenance_staff'
@@ -28,10 +29,10 @@ const AddTaskModal = ({ onAdd, onClose }: Props) => {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (!propertyId) e.propertyId = 'Selecciona una propiedad';
-    if (!description.trim()) e.description = 'La descripción es requerida';
-    if (!assignedTo) e.assignedTo = 'Selecciona a quién asignar';
-    if (!date) e.date = 'La fecha es requerida';
+    if (!propertyId)          e.propertyId  = 'Selecciona una propiedad';
+    if (!description.trim())  e.description = 'La descripción es requerida';
+    if (!assignedTo)          e.assignedTo  = 'Selecciona a quién asignar';
+    if (!date)                e.date        = 'La fecha es requerida';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -39,17 +40,19 @@ const AddTaskModal = ({ onAdd, onClose }: Props) => {
   const handleSubmit = () => {
     if (!validate()) return;
     const property = mockProperties.find(p => p.id === propertyId);
+    const parsedCost = parseFloat(cost);
     onAdd({
-      id: `t${Date.now()}`,
+      id:          `t${Date.now()}`,
       propertyId,
-      title: `${type} – ${property?.name ?? ''}`,
+      title:       `${type} – ${property?.name ?? ''}`,
       description: description.trim(),
-      status: 'Pendiente',
+      status:      'Pendiente',
       type,
       assignedTo,
       date,
-      photos: [],
+      photos:      [],
       priority,
+      cost:        !isNaN(parsedCost) && parsedCost > 0 ? parsedCost : undefined,
     });
     onClose();
   };
@@ -125,7 +128,7 @@ const AddTaskModal = ({ onAdd, onClose }: Props) => {
             {errors.assignedTo && <span className="form-error">{errors.assignedTo}</span>}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             <div className="form-group">
               <label className="form-label">
                 Fecha programada <span style={{ color: 'var(--primary)' }}>*</span>
@@ -150,6 +153,19 @@ const AddTaskModal = ({ onAdd, onClose }: Props) => {
                 <option value="Normal">Normal</option>
                 <option value="Urgente">Urgente</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Costo (MXN)</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                className="form-input"
+                value={cost}
+                onChange={e => setCost(e.target.value)}
+                placeholder="0.00"
+              />
             </div>
           </div>
 
