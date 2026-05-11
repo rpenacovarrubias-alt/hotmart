@@ -5,6 +5,9 @@ import { useApp } from '../context/AppContext';
 interface TaskCardProps {
   task: Task;
   onMove: (taskId: string, newStatus: TaskStatus) => void;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 const TYPE_CLASS: Record<string, string> = {
@@ -20,7 +23,7 @@ const iconBtn: React.CSSProperties = {
   display: 'flex', alignItems: 'center', transition: 'color 0.15s, background 0.15s',
 };
 
-const TaskCard = ({ task, onMove }: TaskCardProps) => {
+const TaskCard = ({ task, onMove, selectMode = false, selected = false, onToggleSelect }: TaskCardProps) => {
   const { openDeleteModal, openEditModal } = useApp();
 
   const getNextStatus = (current: TaskStatus): TaskStatus | null => {
@@ -33,48 +36,83 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
   const typeClass  = TYPE_CLASS[task.type] ?? task.type.toLowerCase();
 
   return (
-    <div className="task-card" style={{ position: 'relative' }}>
+    <div
+      className="task-card"
+      style={{
+        position: 'relative',
+        cursor: selectMode ? 'pointer' : 'default',
+        outline: selected ? '2px solid var(--primary)' : '2px solid transparent',
+        background: selected ? 'rgba(0, 112, 243, 0.04)' : undefined,
+        transition: 'outline 0.1s, background 0.1s',
+      }}
+      onClick={() => selectMode && onToggleSelect && onToggleSelect(task.id)}
+    >
+      {/* Checkbox (selectMode only) */}
+      {selectMode && (
+        <div style={{
+          position: 'absolute', top: '12px', left: '12px',
+          width: '18px', height: '18px', borderRadius: '4px',
+          border: selected ? 'none' : '2px solid var(--border-color)',
+          background: selected ? 'var(--primary)' : 'white',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2, flexShrink: 0,
+        }}>
+          {selected && (
+            <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+              <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+      )}
 
-      {/* Edit icon */}
-      <button
-        onClick={() => openEditModal({ category: 'tarea', itemId: task.id })}
-        style={{ ...iconBtn, top: '10px', right: '42px' }}
-        onMouseEnter={e => {
-          const b = e.currentTarget as HTMLButtonElement;
-          b.style.color = '#6B5BFF';
-          b.style.background = 'rgba(107,91,255,0.08)';
-        }}
-        onMouseLeave={e => {
-          const b = e.currentTarget as HTMLButtonElement;
-          b.style.color = 'var(--text-muted)';
-          b.style.background = 'none';
-        }}
-        title="Editar tarea"
-      >
-        <Pencil size={13} />
-      </button>
+      {/* Edit icon — hidden in selectMode */}
+      {!selectMode && (
+        <button
+          onClick={() => openEditModal({ category: 'tarea', itemId: task.id })}
+          style={{ ...iconBtn, top: '10px', right: '42px' }}
+          onMouseEnter={e => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.color = '#6B5BFF';
+            b.style.background = 'rgba(107,91,255,0.08)';
+          }}
+          onMouseLeave={e => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.color = 'var(--text-muted)';
+            b.style.background = 'none';
+          }}
+          title="Editar tarea"
+        >
+          <Pencil size={13} />
+        </button>
+      )}
 
-      {/* Delete icon */}
-      <button
-        onClick={() => openDeleteModal({ category: 'tarea', itemId: task.id })}
-        style={{ ...iconBtn, top: '10px', right: '10px' }}
-        onMouseEnter={e => {
-          const b = e.currentTarget as HTMLButtonElement;
-          b.style.color = '#EF4444';
-          b.style.background = 'rgba(239,68,68,0.08)';
-        }}
-        onMouseLeave={e => {
-          const b = e.currentTarget as HTMLButtonElement;
-          b.style.color = 'var(--text-muted)';
-          b.style.background = 'none';
-        }}
-        title="Eliminar tarea"
-      >
-        <Trash2 size={13} />
-      </button>
+      {/* Delete icon — hidden in selectMode */}
+      {!selectMode && (
+        <button
+          onClick={() => openDeleteModal({ category: 'tarea', itemId: task.id })}
+          style={{ ...iconBtn, top: '10px', right: '10px' }}
+          onMouseEnter={e => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.color = '#EF4444';
+            b.style.background = 'rgba(239,68,68,0.08)';
+          }}
+          onMouseLeave={e => {
+            const b = e.currentTarget as HTMLButtonElement;
+            b.style.color = 'var(--text-muted)';
+            b.style.background = 'none';
+          }}
+          title="Eliminar tarea"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
 
       {/* Type badge + Urgente pill */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingRight: '68px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px',
+        paddingRight: selectMode ? '8px' : '68px',
+        paddingLeft:  selectMode ? '28px' : '0',
+      }}>
         <div className={`task-type type-${typeClass}`} style={{ marginBottom: 0 }}>
           {task.type}
         </div>
@@ -114,37 +152,40 @@ const TaskCard = ({ task, onMove }: TaskCardProps) => {
         </div>
       </div>
 
-      <div style={{ marginTop: '16px', display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-        {task.status !== 'Completado' && (
-          <button
-            style={{
-              flex: 1, background: 'var(--bg-color)', border: 'none', padding: '8px',
-              borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: '6px', fontSize: '12px', fontWeight: 600,
-              color: 'var(--text-main)',
-            }}
-            onClick={() => nextStatus && onMove(task.id, nextStatus)}
-          >
-            Mover a {nextStatus}
-            <ArrowRight size={14} />
-          </button>
-        )}
+      {/* Move / complete buttons — hidden in selectMode */}
+      {!selectMode && (
+        <div style={{ marginTop: '16px', display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+          {task.status !== 'Completado' && (
+            <button
+              style={{
+                flex: 1, background: 'var(--bg-color)', border: 'none', padding: '8px',
+                borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: '6px', fontSize: '12px', fontWeight: 600,
+                color: 'var(--text-main)',
+              }}
+              onClick={() => nextStatus && onMove(task.id, nextStatus)}
+            >
+              Mover a {nextStatus}
+              <ArrowRight size={14} />
+            </button>
+          )}
 
-        {task.status === 'En Progreso' && (
-          <button
-            style={{ background: 'rgba(0, 166, 153, 0.1)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', color: 'var(--success)' }}
-            title="Subir evidencia"
-          >
-            <Camera size={16} />
-          </button>
-        )}
+          {task.status === 'En Progreso' && (
+            <button
+              style={{ background: 'rgba(0, 166, 153, 0.1)', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', color: 'var(--success)' }}
+              title="Subir evidencia"
+            >
+              <Camera size={16} />
+            </button>
+          )}
 
-        {task.status === 'Completado' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--success)', fontSize: '13px', fontWeight: 600 }}>
-            <CheckCircle size={16} /> Tarea Finalizada
-          </div>
-        )}
-      </div>
+          {task.status === 'Completado' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--success)', fontSize: '13px', fontWeight: 600 }}>
+              <CheckCircle size={16} /> Tarea Finalizada
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
