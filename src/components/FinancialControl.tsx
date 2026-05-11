@@ -5,12 +5,15 @@ import { useApp } from '../context/AppContext';
 import type { Stay, PropertyConfig } from '../types';
 
 export default function FinancialControl({ propertyId }: { propertyId: string }) {
-  const { expenses: contextExpenses } = useApp();
+  const { expenses: contextExpenses, properties } = useApp();
   const [activeTab, setActiveTab] = useState<'config'|'stays'|'report'|'expenses'>('stays');
   const [period, setPeriod] = useState('month');
 
   const [config] = useState<PropertyConfig | undefined>(mockPropertyConfigs.find(c => c.propertyId === propertyId));
   const [stays]  = useState<Stay[]>(mockStays.filter(s => s.propertyId === propertyId));
+
+  const ownerOptions = [...new Set(properties.map(p => p.hostName).filter(Boolean))];
+  const [ownerName, setOwnerName] = useState(config?.ownerName ?? '');
 
   const now = new Date();
   const filterByDate = (dateStr: string) => {
@@ -72,7 +75,21 @@ export default function FinancialControl({ propertyId }: { propertyId: string })
         {activeTab === 'config' && (
           <form onSubmit={handleConfigSave}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div className="form-group"><label className="form-label">Propietario</label><input type="text" className="form-input" defaultValue={config.ownerName} /></div>
+              <div className="form-group">
+                <label className="form-label">Propietario</label>
+                <select
+                  className="form-input"
+                  value={ownerName}
+                  onChange={e => setOwnerName(e.target.value)}
+                >
+                  {ownerName && !ownerOptions.includes(ownerName) && (
+                    <option value={ownerName}>{ownerName}</option>
+                  )}
+                  {ownerOptions.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="form-group"><label className="form-label">Co-Anfitrión</label><input type="text" className="form-input" defaultValue={config.cohostName} /></div>
               <div className="form-group"><label className="form-label">Precio x Noche Base</label><input type="number" className="form-input" defaultValue={config.nightlyRate} /></div>
               <div className="form-group"><label className="form-label">Costo de Limpieza</label><input type="number" className="form-input" defaultValue={config.cleaningFee} /></div>
