@@ -1,28 +1,226 @@
 import { useState } from 'react';
 import { Plus, Filter, X } from 'lucide-react';
-import { mockUsers, mockProperties } from '../data/mockData';
-import type { AppUser } from '../types';
+import { useApp } from '../context/AppContext';
+import type { AppUser, UserRole } from '../types';
 
-const roleDisplay: Record<string, { label: string, color: string, bg: string }> = {
-  admin: { label: 'Administrador', color: '#FFFFFF', bg: '#222222' },
-  manager: { label: 'Gerente', color: '#FFFFFF', bg: '#4A4A4A' },
-  host: { label: 'Anfitrión', color: '#00A699', bg: 'rgba(0, 166, 153, 0.1)' },
-  cleaning_staff: { label: 'Limpieza', color: '#FC642D', bg: 'rgba(252, 100, 45, 0.1)' },
-  maintenance_staff: { label: 'Mantenimiento', color: '#FF5A5F', bg: 'rgba(255, 90, 95, 0.1)' }
+const roleDisplay: Record<UserRole, { label: string; color: string; bg: string }> = {
+  admin:             { label: 'Administrador', color: '#FFFFFF', bg: '#222222' },
+  manager:           { label: 'Gerente',       color: '#FFFFFF', bg: '#4A4A4A' },
+  host:              { label: 'Anfitrión',     color: '#00A699', bg: 'rgba(0, 166, 153, 0.1)' },
+  cleaning_staff:    { label: 'Limpieza',      color: '#FC642D', bg: 'rgba(252, 100, 45, 0.1)' },
+  maintenance_staff: { label: 'Mantenimiento', color: '#FF5A5F', bg: 'rgba(255, 90, 95, 0.1)' },
+};
+
+const inp: React.CSSProperties = {
+  width: '100%', padding: '10px 14px', fontFamily: 'inherit', fontSize: '14px',
+  border: '1.5px solid var(--border-color)', borderRadius: '10px', outline: 'none',
+  background: 'white', boxSizing: 'border-box',
+};
+
+type UserForm = {
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  propertyAccess: string[];
+  status: 'active' | 'inactive';
+};
+
+const DEFAULT_FORM: UserForm = {
+  name: '', email: '', phone: '', role: 'cleaning_staff', propertyAccess: [], status: 'active',
 };
 
 const Team = () => {
-  const [users] = useState<AppUser[]>(mockUsers);
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { users, properties, addUser, updateUser, toggleUserStatus, showToast } = useApp();
+
+  const [roleFilter, setRoleFilter]   = useState<string>('all');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingUser, setEditingUser]   = useState<AppUser | null>(null);
+  const [form, setForm]                 = useState<UserForm>(DEFAULT_FORM);
+  const [errors, setErrors]             = useState<Record<string, string>>({});
 
   const filteredUsers = roleFilter === 'all' ? users : users.filter(u => u.role === roleFilter);
+
+  // ── Open modals ─────────────────────────────────────────────────────────────
+  const openAdd = () => {
+    setForm(DEFAULT_FORM);
+    setErrors({});
+    setAddModalOpen(true);
+  };
+
+  const openEdit = (user: AppUser) => {
+    setForm({
+      name:           user.name,
+      email:          user.email,
+      phone:          user.phone ?? '',
+      role:           user.role,
+      propertyAccess: user.propertyAccess,
+      status:         user.status,
+    });
+    setErrors({});
+    setEditingUser(user);
+  };
+
+  const closeModals = () => {
+    setAddModalOpen(false);
+    setEditingUser(null);
+    setForm(DEFAULT_FORM);
+    setErrors({});
+  };
+
+  // ── Validation & save ────────────────────────────────────────────────────────
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim())  errs.name  = 'Requerido';
+    if (!form.email.trim()) errs.email = 'Requerido';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSaveAdd = () => {
+    if (!validate()) return;
+    const newUser: AppUser = {
+      id:             `u${Date.now()}`,
+      name:           form.name.trim(),
+      email:          form.email.trim(),
+      phone:          form.phone.trim() || undefined,
+      role:           form.role,
+      propertyAccess: form.propertyAccess,
+      status:         form.status,
+      avatarUrl:      `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name.trim())}&background=FF5A5F&color=fff`,
+      createdAt:      new Date().toISOString(),
+    };
+    addUser(newUser);
+    showToast(`${newUser.name} agregado correctamente`);
+    closeModals();
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingUser || !validate()) return;
+    updateUser({
+      ...editingUser,
+      name:           form.name.trim(),
+      email:          form.email.trim(),
+      phone:          form.phone.trim() || undefined,
+      role:           form.role,
+      propertyAccess: form.propertyAccess,
+      status:         form.status,
+    });
+    showToast(`${form.name.trim()} actualizado correctamente`);
+    closeModals();
+  };
+
+  const handleToggleAccess = (propId: string) => {
+    setForm(f => ({
+      ...f,
+      propertyAccess: f.propertyAccess.includes(propId)
+        ? f.propertyAccess.filter(id => id !== propId)
+        : [...f.propertyAccess, propId],
+    }));
+  };
+
+  // ── Shared form ──────────────────────────────────────────────────────────────
+  const renderForm = (onSave: () => void, saveLabel: string) => (
+    <div className="modal-body" style={{ display: 'grid', gap: '16px' }}>
+      <div>
+        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+          Nombre Completo <span style={{ color: '#EF4444' }}>*</span>
+        </label>
+        <input
+          style={{ ...inp, borderColor: errors.name ? '#EF4444' : 'var(--border-color)' }}
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          placeholder="Juan Pérez"
+        />
+        {errors.name && <span style={{ color: '#EF4444', fontSize: '12px' }}>{errors.name}</span>}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>
+            Email <span style={{ color: '#EF4444' }}>*</span>
+          </label>
+          <input
+            type="email"
+            style={{ ...inp, borderColor: errors.email ? '#EF4444' : 'var(--border-color)' }}
+            value={form.email}
+            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            placeholder="juan@ejemplo.com"
+          />
+          {errors.email && <span style={{ color: '#EF4444', fontSize: '12px' }}>{errors.email}</span>}
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Teléfono</label>
+          <input
+            style={inp}
+            value={form.phone}
+            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            placeholder="555-1234"
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Rol</label>
+          <select style={inp} value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as UserRole }))}>
+            <option value="admin">Administrador</option>
+            <option value="manager">Gerente</option>
+            <option value="host">Anfitrión</option>
+            <option value="cleaning_staff">Personal de Limpieza</option>
+            <option value="maintenance_staff">Personal de Mantenimiento</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Estado</label>
+          <select style={inp} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'active' | 'inactive' }))}>
+            <option value="active">Activo</option>
+            <option value="inactive">Inactivo</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Acceso a Propiedades</label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--bg-color)', padding: '12px', borderRadius: '8px' }}>
+          {properties.map(p => (
+            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={form.propertyAccess.includes(p.id)}
+                onChange={() => handleToggleAccess(p.id)}
+              />
+              {p.name}
+            </label>
+          ))}
+        </div>
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+          Sin selección = acceso a todas las propiedades
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '8px' }}>
+        <button
+          onClick={closeModals}
+          style={{ background: 'none', border: '1.5px solid var(--border-color)', borderRadius: '10px', padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', fontFamily: 'inherit' }}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={onSave}
+          style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '10px', padding: '9px 22px', cursor: 'pointer', fontSize: '13px', fontWeight: 700, fontFamily: 'inherit' }}
+        >
+          {saveLabel}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div>
       <div className="page-header">
         <h2 className="page-title">Gestión de Usuarios</h2>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+        <button className="btn-primary" onClick={openAdd}>
           <Plus size={20} />
           Agregar Usuario
         </button>
@@ -31,9 +229,9 @@ const Team = () => {
       <div className="property-card" style={{ padding: '0', overflow: 'hidden' }}>
         <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '16px', alignItems: 'center' }}>
           <Filter size={18} color="var(--text-muted)" />
-          <select 
-            value={roleFilter} 
-            onChange={(e) => setRoleFilter(e.target.value)}
+          <select
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
             style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
           >
             <option value="all">Todos los Roles</option>
@@ -71,13 +269,13 @@ const Team = () => {
                     <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{user.phone || '-'}</div>
                   </td>
                   <td style={{ padding: '16px 20px' }}>
-                    <span style={{ 
-                      background: roleDisplay[user.role].bg, 
+                    <span style={{
+                      background: roleDisplay[user.role].bg,
                       color: roleDisplay[user.role].color,
-                      padding: '4px 8px', 
-                      borderRadius: '4px', 
+                      padding: '4px 8px',
+                      borderRadius: '4px',
                       fontSize: '12px',
-                      fontWeight: 600
+                      fontWeight: 600,
                     }}>
                       {roleDisplay[user.role].label}
                     </span>
@@ -91,8 +289,21 @@ const Team = () => {
                     </span>
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                    <button style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, marginRight: '12px' }}>Editar</button>
-                    <button style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Desactivar</button>
+                    <button
+                      onClick={() => openEdit(user)}
+                      style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, marginRight: '12px' }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => {
+                        toggleUserStatus(user.id);
+                        showToast(`${user.name} ${user.status === 'active' ? 'desactivado' : 'activado'}`);
+                      }}
+                      style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      {user.status === 'active' ? 'Desactivar' : 'Activar'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -101,49 +312,28 @@ const Team = () => {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+      {/* Modal — Agregar Usuario */}
+      {addModalOpen && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="modal-content" style={{ maxWidth: '560px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3 style={{ fontSize: '20px', fontWeight: 600 }}>Agregar Usuario</h3>
-              <button className="modal-close" onClick={() => setIsModalOpen(false)}><X size={24} /></button>
+              <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Agregar Usuario</h3>
+              <button className="modal-close" onClick={closeModals}><X size={24} /></button>
             </div>
-            <div className="modal-body" style={{ display: 'grid', gap: '20px' }}>
-              <div className="form-group"><label className="form-label">Nombre Completo</label><input type="text" className="form-input" placeholder="Juan Pérez" /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group"><label className="form-label">Email</label><input type="email" className="form-input" placeholder="juan@ejemplo.com" /></div>
-                <div className="form-group"><label className="form-label">Teléfono</label><input type="text" className="form-input" placeholder="555-1234" /></div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div className="form-group"><label className="form-label">Contraseña Temporal</label><input type="text" className="form-input" placeholder="Temp1234!" /></div>
-                <div className="form-group">
-                  <label className="form-label">Rol</label>
-                  <select className="form-input">
-                    <option value="admin">Administrador</option>
-                    <option value="manager">Gerente</option>
-                    <option value="host">Anfitrión</option>
-                    <option value="cleaning_staff">Personal de Limpieza</option>
-                    <option value="maintenance_staff">Personal de Mantenimiento</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="form-label">Acceso a Propiedades</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-color)', padding: '16px', borderRadius: '8px' }}>
-                  {mockProperties.map(p => (
-                    <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                      <input type="checkbox" /> {p.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                <button className="btn-outline" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button className="btn-primary" onClick={() => setIsModalOpen(false)}>Guardar Usuario</button>
-              </div>
+            {renderForm(handleSaveAdd, 'Guardar Usuario')}
+          </div>
+        </div>
+      )}
+
+      {/* Modal — Editar Usuario */}
+      {editingUser && (
+        <div className="modal-overlay" onClick={closeModals}>
+          <div className="modal-content" style={{ maxWidth: '560px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Editar Usuario</h3>
+              <button className="modal-close" onClick={closeModals}><X size={24} /></button>
             </div>
+            {renderForm(handleSaveEdit, 'Guardar Cambios')}
           </div>
         </div>
       )}

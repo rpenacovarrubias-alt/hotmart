@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { mockProperties, mockTasks, mockExpenses, mockAdminControl } from '../data/mockData';
-import type { Property, Task, TaskStatus, Expense, AdminControlRecord } from '../types';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { mockProperties, mockTasks, mockExpenses, mockAdminControl, mockUsers } from '../data/mockData';
+import type { Property, Task, TaskStatus, Expense, AdminControlRecord, AppUser } from '../types';
 
 // ── Delete modal ──────────────────────────────────────────────────────────────
 export type DeleteCategory = 'propiedad' | 'gasto' | 'tarea' | 'reporte';
@@ -26,6 +26,7 @@ interface AppContextType {
   tasks: Task[];
   expenses: Expense[];
   adminRecords: AdminControlRecord[];
+  users: AppUser[];
 
   // Property ops
   addProperty: (p: Property) => void;
@@ -47,6 +48,11 @@ interface AppContextType {
   updateAdminRecord: (r: AdminControlRecord) => void;
   deleteAdminRecord: (id: string) => void;
 
+  // User ops
+  addUser: (u: AppUser) => void;
+  updateUser: (u: AppUser) => void;
+  toggleUserStatus: (id: string) => void;
+
   // Delete modal
   deleteModalOpen: boolean;
   deleteModalPreselect: DeletePreselect | null;
@@ -64,13 +70,39 @@ interface AppContextType {
   showToast: (message: string) => void;
 }
 
+// ── localStorage helpers ──────────────────────────────────────────────────────
+function load<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const KEYS = {
+  properties:   'airbnb_properties',
+  tasks:        'airbnb_tasks',
+  expenses:     'airbnb_expenses',
+  adminRecords: 'airbnb_adminRecords',
+  users:        'airbnb_users',
+};
+
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [properties, setProperties]     = useState<Property[]>(mockProperties);
-  const [tasks, setTasks]               = useState<Task[]>(mockTasks);
-  const [expenses, setExpenses]         = useState<Expense[]>(mockExpenses);
-  const [adminRecords, setAdminRecords] = useState<AdminControlRecord[]>(mockAdminControl);
+  const [properties, setProperties]       = useState<Property[]>          (() => load(KEYS.properties,   mockProperties));
+  const [tasks, setTasks]                 = useState<Task[]>              (() => load(KEYS.tasks,         mockTasks));
+  const [expenses, setExpenses]           = useState<Expense[]>           (() => load(KEYS.expenses,      mockExpenses));
+  const [adminRecords, setAdminRecords]   = useState<AdminControlRecord[]>(() => load(KEYS.adminRecords,  mockAdminControl));
+  const [users, setUsers]                 = useState<AppUser[]>           (() => load(KEYS.users,         mockUsers));
+
+  // Persist every state to localStorage on change
+  useEffect(() => { localStorage.setItem(KEYS.properties,   JSON.stringify(properties));   }, [properties]);
+  useEffect(() => { localStorage.setItem(KEYS.tasks,        JSON.stringify(tasks));        }, [tasks]);
+  useEffect(() => { localStorage.setItem(KEYS.expenses,     JSON.stringify(expenses));     }, [expenses]);
+  useEffect(() => { localStorage.setItem(KEYS.adminRecords, JSON.stringify(adminRecords)); }, [adminRecords]);
+  useEffect(() => { localStorage.setItem(KEYS.users,        JSON.stringify(users));        }, [users]);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen]           = useState(false);
@@ -106,6 +138,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteAdminRecord = (id: string) =>
     setAdminRecords(prev => prev.filter(r => r.id !== id));
 
+  // ── User ──────────────────────────────────────────────────────────────────
+  const addUser          = (u: AppUser) => setUsers(prev => [...prev, u]);
+  const updateUser       = (u: AppUser) => setUsers(prev => prev.map(x => x.id === u.id ? u : x));
+  const toggleUserStatus = (id: string) =>
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u));
+
   // ── Delete modal ──────────────────────────────────────────────────────────
   const openDeleteModal = (preselect?: Omit<DeletePreselect, 'fromInline'>) => {
     setDeleteModalPreselect(preselect ? { ...preselect, fromInline: true } : null);
@@ -134,11 +172,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AppContext.Provider value={{
-      properties, tasks, expenses, adminRecords,
+      properties, tasks, expenses, adminRecords, users,
       addProperty, updateProperty, deleteProperty,
       addTask, updateTask, moveTask, deleteTask,
       addExpense, updateExpense, deleteExpense,
       updateAdminRecord, deleteAdminRecord,
+      addUser, updateUser, toggleUserStatus,
       deleteModalOpen, deleteModalPreselect, openDeleteModal, closeDeleteModal,
       editModalOpen, editModalPreselect, openEditModal, closeEditModal,
       toast, showToast,

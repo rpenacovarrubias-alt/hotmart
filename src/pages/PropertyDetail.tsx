@@ -1,23 +1,26 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Bed, Bath, Users, Maximize, Car, Waves, Dog, Link as LinkIcon, Activity, CheckCircle } from 'lucide-react';
-import { mockProperties, mockTasks, mockIncomes } from '../data/mockData';
+import { mockIncomes } from '../data/mockData';
+import { useApp } from '../context/AppContext';
 import FinancialControl from '../components/FinancialControl';
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const property = mockProperties.find(p => p.id === id);
+  const { properties, tasks, openEditModal } = useApp();
+
+  const property = properties.find(p => p.id === id);
 
   if (!property) return <div>Propiedad no encontrada</div>;
 
-  const pendingTasksCount = mockTasks.filter(t => t.propertyId === id && t.status !== 'Completado').length;
+  const pendingTasksCount = tasks.filter(t => t.propertyId === id && t.status !== 'Completado').length;
   const monthlyIncome = mockIncomes.filter(i => i.propertyId === id).reduce((acc, curr) => acc + curr.grossIncome, 0);
 
   return (
     <div>
       <div className="page-header" style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button 
+          <button
             onClick={() => navigate('/propiedades')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex', alignItems: 'center' }}
           >
@@ -25,27 +28,32 @@ const PropertyDetail = () => {
           </button>
           <h2 className="page-title" style={{ margin: 0 }}>Ficha Técnica</h2>
         </div>
-        <button className="btn-outline">Editar Propiedad</button>
+        <button
+          className="btn-outline"
+          onClick={() => openEditModal({ category: 'propiedad', itemId: id! })}
+        >
+          Editar Propiedad
+        </button>
       </div>
 
       <div className="property-card" style={{ padding: '0', overflow: 'hidden' }}>
         <div style={{ position: 'relative' }}>
-          <img 
-            src={property.imageUrl} 
-            alt={property.name} 
+          <img
+            src={property.imageUrl}
+            alt={property.name}
             style={{ width: '100%', height: '350px', objectFit: 'cover' }}
           />
-          <div style={{ 
-            position: 'absolute', top: '20px', left: '20px', 
-            background: property.role === 'cohost' ? 'rgba(0, 112, 243, 0.9)' : 'rgba(0, 166, 153, 0.9)', 
+          <div style={{
+            position: 'absolute', top: '20px', left: '20px',
+            background: property.role === 'cohost' ? 'rgba(0, 112, 243, 0.9)' : 'rgba(0, 166, 153, 0.9)',
             color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase'
           }}>
             {property.role === 'cohost' ? 'Co-Anfitrión' : 'Anfitrión'}
           </div>
         </div>
-        
+
         <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
-          
+
           <div>
             <h3 style={{ fontSize: '28px', fontWeight: 700, marginBottom: '8px' }}>{property.name}</h3>
             <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
@@ -115,7 +123,7 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Control Financiero Módulo */}
       <FinancialControl propertyId={property.id} />
     </div>
@@ -124,7 +132,7 @@ const PropertyDetail = () => {
 
 const BuildingIcon = ({ type }: { type: string }) => {
   if (type === 'departamento') return <MapPin size={18} />;
-  return <MapPin size={18} />; // Generic fallback
+  return <MapPin size={18} />;
 }
 
 export default PropertyDetail;
