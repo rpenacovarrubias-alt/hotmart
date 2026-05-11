@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { AppProvider, useApp } from './context/AppContext';
 import Sidebar from './components/Sidebar';
 import DeleteModal from './components/DeleteModal';
@@ -39,6 +40,7 @@ const AppContent = () => {
       {deleteModalOpen && <DeleteModal />}
       {editModalOpen   && <EditModal />}
       <Toast />
+      <Toaster richColors position="top-right" />
     </BrowserRouter>
   );
 };
