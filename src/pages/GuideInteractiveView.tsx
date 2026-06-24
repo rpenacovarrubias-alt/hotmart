@@ -1,34 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { 
-  ArrowLeft, MapPin, Key, Flame, Trash2, Check, Phone, 
-  ShieldAlert, Bed, Users, Copy, ExternalLink, Tv, 
-  BookOpen, DoorOpen, Sparkles, Lock, ChevronDown, 
-  MessageSquare, Image, CheckCircle
-} from 'lucide-react';
 import { toast } from 'sonner';
 import './GuideInteractive.css';
-
-const FacebookIcon = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-  </svg>
-);
-
-const InstagramIcon = () => (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-  </svg>
-);
-
-const BlueskyIcon = () => (
-  <svg viewBox="0 0 576 512" width="18" height="18" fill="currentColor">
-    <path d="M407.8 29.4C379.8 82.5 328.7 182.9 288 249.7 247.3 182.9 196.2 82.5 168.2 29.4 148-9.1 88.5-9.8 61.4 27.7c-26.6 36.9-4.8 112.7 15.6 172.9 23.3 68.7 64.9 143.4 96.9 183.1 27.9 34.7 65.5 50.1 101.9 57.6-56.1 11.3-107.5 14.8-129.2 11.5-63.5-9.6-96.1-47.4-106.3-103.7-1.7-9.4-11.2-14.7-20.1-11.4L4.7 344c-9.1 3.3-13.6 13.4-10.1 22.4C17.6 427.4 67.5 486.2 150.2 505c31 7.1 72.8 8 116.8-5.3 7.8-2.4 13.8-8.2 16.5-15.8L288 471.5l4.6 12.3c2.7 7.6 8.7 13.4 16.5 15.8 44 13.3 85.8 12.4 116.8 5.3 82.7-18.9 132.6-77.7 155.6-138.6 3.5-9 1-19.1-10.1-22.4l-19.5-7.1c-8.9-3.3-18.4 2-20.1 11.4-10.2 56.3-42.8 94.1-106.3 103.7-21.7 3.3-73.1-.2-129.2-11.5 36.4-7.5 74-22.9 101.9-57.6 32-39.7 73.6-114.4 96.9-183.1 20.4-60.2 42.2-136 15.6-172.9-27.1-37.5-86.6-36.8-106.8 1.7z"/>
-  </svg>
-);
 
 const GuideInteractiveView = () => {
   const { id } = useParams();
@@ -42,7 +16,7 @@ const GuideInteractiveView = () => {
   // Accordion State for Manuales
   const [expandedManuals, setExpandedManuals] = useState<Record<string, boolean>>({
     boiler: true,
-    trash: false,
+    trash: true,
     tv: false,
   });
 
@@ -53,8 +27,8 @@ const GuideInteractiveView = () => {
     }));
   };
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
+  const scrollToSection = (idStr: string) => {
+    const element = document.getElementById(idStr);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -68,12 +42,6 @@ const GuideInteractiveView = () => {
       </div>
     );
   }
-
-  const formattedDate = new Date(guide.updatedAt || guide.createdAt || new Date()).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
 
   const handleCopyPassword = () => {
     navigator.clipboard.writeText(guide.wifiPassword);
@@ -92,200 +60,209 @@ const GuideInteractiveView = () => {
   const wifiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=WIFI:S:${encodeURIComponent(guide.wifiNetwork)};T:WPA;P:${encodeURIComponent(guide.wifiPassword)};;`;
 
   return (
-    <div className="interactive-guide-wrapper">
+    <div className="interactive-guide-wrapper bg-surface text-on-surface custom-scrollbar">
       {/* ── TOP NAVIGATION ── */}
-      <header className="guest-header">
-        <div className="guest-header-inner">
-          <button onClick={() => navigate('/guias')} className="guest-back-btn">
-            <ArrowLeft size={18} />
-            <span className="guest-back-text">REGRESAR</span>
-          </button>
-          <a href={`/guias/${guide.id}/pdf`} target="_blank" rel="noreferrer" className="btn-pdf-download">
-            Guardar PDF
-          </a>
-        </div>
+      <header className="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant shadow-sm h-16 flex justify-between items-center px-margin-mobile md:px-margin-desktop">
+        <button onClick={() => navigate('/guias')} className="flex items-center gap-2 text-on-surface hover:text-primary transition-colors active:scale-95 bg-transparent border-none cursor-pointer">
+          <span className="material-symbols-outlined">arrow_back</span>
+          <span className="font-headline-md text-headline-md font-bold uppercase tracking-wider">REGRESAR</span>
+        </button>
+        <a href={`/guias/${guide.id}/pdf`} target="_blank" rel="noreferrer" className="bg-primary text-on-primary px-6 py-2 rounded-lg font-headline-md text-headline-md shadow-sm hover:brightness-110 active:scale-95 transition-all text-decoration-none flex items-center justify-center">
+          Guardar PDF
+        </a>
       </header>
 
-      <main className="guest-main-container">
+      <main className="pt-16 pb-24 max-w-container-max mx-auto px-4 md:px-margin-desktop">
         {/* ── HERO BANNER ── */}
-        <section className="guest-hero-section" style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%), url(${guide.imageUrl})` }}>
-          <div className="guest-hero-content">
-            <span className="guest-hero-eyebrow">GUÍA DE USO DIGITAL</span>
-            <h1 className="guest-hero-title">{guide.name}</h1>
+        <section className="relative rounded-2xl overflow-hidden mt-8 mb-12 h-[500px] flex items-end">
+          <div className="absolute inset-0 z-0">
+            <img alt={guide.name} className="w-full h-full object-cover" src={guide.imageUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBV16JovlvOvXS-hfO5mRGPxIpa0cmRwljUl9-d-5ltNARMsZKlozQPvXlT-dF_lSYKrQRVvtqfEh1_U7SSEG2q6bX_7WeisTaImBuAhmV1ZyfT3pw8Usox-Ig9JKeWxPtR5VJZq4Bs4Kfre7RpOfYj5rxqG-kYLExS0Zz7t7FL9DzI9Q0bNav-iPqNlztt-W_S6l2YSwVs-CMVBNyvjxuTePoIic2KD9NL75cXeD3JaKiKUYT5bKXjOKMLNvFmXJz8iD1UZ8kvET0"} />
+            <div className="absolute inset-0 hero-overlay" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(26,28,28,0.95) 100%)" }}></div>
+          </div>
+          <div className="relative z-10 p-8 md:p-12 w-full text-center text-on-primary">
+            <p className="font-label-caps text-label-caps tracking-widest text-white mb-4 uppercase drop-shadow-md">GUÍA DE USO DIGITAL</p>
+            <h1 className="font-headline-xl text-headline-xl md:text-headline-xl-mobile mb-6 drop-shadow-lg">{guide.name}</h1>
             
-            <div className="guest-hero-badges">
-              <span className="guest-badge">
-                <Bed size={16} className="text-secondary-fixed" />
-                <span>{guide.bedrooms} Dormitorios</span>
-              </span>
-              <span className="guest-badge">
-                <Users size={16} className="text-secondary-fixed" />
-                <span>Max {guide.maxGuests} Huéspedes</span>
-              </span>
-              <span className="guest-badge">
-                <MapPin size={16} className="text-secondary-fixed" />
-                <span>{guide.location}</span>
-              </span>
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                <span className="material-symbols-outlined text-secondary-fixed">bed</span>
+                <span className="font-body-md text-body-md">{guide.bedrooms} Dormitorios</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                <span className="material-symbols-outlined text-secondary-fixed">groups</span>
+                <span className="font-body-md text-body-md">Max {guide.maxGuests} Huéspedes</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                <span className="material-symbols-outlined text-secondary-fixed">location_on</span>
+                <span className="font-body-md text-body-md">{guide.location}</span>
+              </div>
             </div>
 
-            <p className="guest-hero-desc">{guide.welcomeMessage}</p>
+            <p className="font-body-lg text-body-lg text-white mb-4 leading-relaxed max-w-3xl mx-auto drop-shadow-md">
+              {guide.welcomeMessage}
+            </p>
           </div>
         </section>
 
         {/* ── BENTO GRID SECTIONS ── */}
-        <div className="guest-bento-grid">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
           
           {/* Bento Card 1: Accesos Rápidos (Col span 12) */}
-          <section className="bento-card col-span-12">
-            <h2 className="bento-card-title">Accesos Rápidos</h2>
-            <div className="quick-nav-grid-bento">
-              <button onClick={() => scrollToSection('sec-acceso')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-blue-50 text-blue-500">
-                  <Key size={24} />
+          <section className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8">Accesos Rápidos</h2>
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+              <button onClick={() => scrollToSection('sec-acceso')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">key</span>
                 </div>
-                <span className="quick-nav-label-bento">Acceso</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Acceso</span>
               </button>
               
-              <button onClick={() => scrollToSection('sec-wifi')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-orange-50 text-orange-500">
-                  <Lock size={24} />
+              <button onClick={() => scrollToSection('sec-wifi')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">wifi</span>
                 </div>
-                <span className="quick-nav-label-bento">WiFi</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">WiFi</span>
               </button>
               
-              <button onClick={() => scrollToSection('sec-manuales')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-purple-50 text-purple-500">
-                  <BookOpen size={24} />
+              <button onClick={() => scrollToSection('sec-manuales')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">menu_book</span>
                 </div>
-                <span className="quick-nav-label-bento">Manuales</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Manuales</span>
               </button>
               
               {guide.amenities.length > 0 && (
-                <button onClick={() => scrollToSection('sec-amenidades')} className="quick-nav-item-bento">
-                  <div className="quick-nav-circle bg-green-50 text-green-500">
-                    <Sparkles size={24} />
+                <button onClick={() => scrollToSection('sec-amenidades')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                  <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 transition-transform group-hover:scale-110">
+                    <span className="material-symbols-outlined text-3xl">home_repair_service</span>
                   </div>
-                  <span className="quick-nav-label-bento">Servicios</span>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">Servicios</span>
                 </button>
               )}
               
-              <button onClick={() => scrollToSection('sec-reglas')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-red-50 text-red-500">
-                  <ShieldAlert size={24} />
+              <button onClick={() => scrollToSection('sec-reglas')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">gavel</span>
                 </div>
-                <span className="quick-nav-label-bento">Reglas</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Reglas</span>
               </button>
               
               {guide.checkoutSteps.length > 0 && (
-                <button onClick={() => scrollToSection('sec-checkout')} className="quick-nav-item-bento">
-                  <div className="quick-nav-circle bg-rose-50 text-rose-500">
-                    <DoorOpen size={24} />
+                <button onClick={() => scrollToSection('sec-checkout')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                  <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
+                    <span className="material-symbols-outlined text-3xl">logout</span>
                   </div>
-                  <span className="quick-nav-label-bento">Salida</span>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">Salida</span>
                 </button>
               )}
               
-              <button onClick={() => scrollToSection('sec-contactos')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-cyan-50 text-cyan-500">
-                  <Phone size={24} />
+              <button onClick={() => scrollToSection('sec-contactos')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">support_agent</span>
                 </div>
-                <span className="quick-nav-label-bento">Contacto</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Contacto</span>
               </button>
 
-              <button onClick={() => scrollToSection('sec-fotos')} className="quick-nav-item-bento">
-                <div className="quick-nav-circle bg-purple-50 text-purple-500">
-                  <Image size={24} />
+              <button onClick={() => scrollToSection('sec-fotos')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 transition-transform group-hover:scale-110">
+                  <span className="material-symbols-outlined text-3xl">photo_camera</span>
                 </div>
-                <span className="quick-nav-label-bento">Fotos</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Fotos</span>
               </button>
             </div>
           </section>
 
           {/* Bento Card 2: Llegada y Acceso Autónomo (Col span 8) */}
-          <section id="sec-acceso" className="bento-card col-span-8">
-            <h2 className="bento-card-title flex items-center gap-2">
-              <DoorOpen className="text-primary-color" size={24} />
+          <section id="sec-acceso" className="md:col-span-8 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-3xl">sensor_door</span>
               Llegada y Acceso Autónomo
             </h2>
             
-            <div className="guest-access-times-bento">
-              <div className="time-block-bento bg-blue-50 border-blue-100">
-                <span className="time-label-bento text-blue-600">Entrada (Check-in)</span>
-                <span className="time-value-bento">{guide.checkInTime}</span>
-                <span className="time-sub-bento text-blue-400">{guide.checkInNote}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
+                <p className="font-label-caps text-label-caps text-blue-600 mb-2 uppercase">Entrada (Check-in)</p>
+                <p className="font-headline-lg text-headline-lg text-on-surface font-bold">{guide.checkInTime}</p>
+                <p className="text-xs text-blue-400 mt-1">{guide.checkInNote || "hasta las 11:00 p.m."}</p>
               </div>
-              <div className="time-block-bento bg-green-50 border-green-100">
-                <span className="time-label-bento text-green-600">Salida (Check-out)</span>
-                <span className="time-value-bento">{guide.checkOutTime}</span>
-                <span className="time-sub-bento text-green-400">{guide.checkOutNote}</span>
+              <div className="p-6 rounded-xl bg-green-50 border border-green-100 text-center">
+                <p className="font-label-caps text-label-caps text-green-600 mb-2 uppercase">Salida (Check-out)</p>
+                <p className="font-headline-lg text-headline-lg text-on-surface font-bold">{guide.checkOutTime}</p>
+                <p className="text-xs text-green-400 mt-1">{guide.checkOutNote || "Máximo"}</p>
               </div>
             </div>
 
-            <div className="guest-info-block-bento">
-              <h3 className="guest-info-block-title text-primary-color">Instrucciones para Entrar</h3>
-              <p className="guest-info-block-text">{guide.accessInstructions}</p>
+            <div className="bg-surface-container-low p-6 rounded-xl mb-6">
+              <h3 className="font-headline-md text-headline-md text-primary mb-4">Instrucciones para Entrar</h3>
+              <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line">
+                {guide.accessInstructions}
+              </p>
             </div>
 
             {guide.googleMapsUrl && (
-              <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="guest-maps-btn-bento">
-                <MapPin size={18} />
+              <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-4 border-2 border-primary-container/20 rounded-xl text-primary font-bold hover:bg-primary-container/5 transition-colors text-decoration-none">
+                <span className="material-symbols-outlined">map</span>
                 <span>Ubicación de la casa en Google Maps</span>
-                <ExternalLink size={14} />
+                <span className="material-symbols-outlined text-sm">open_in_new</span>
               </a>
             )}
           </section>
 
           {/* Bento Card 3: WiFi (Col span 4) */}
-          <section id="sec-wifi" className="bento-card col-span-4 wifi-dark-card">
-            <div className="wifi-dark-card-inner">
-              <h2 className="bento-card-title text-white flex items-center gap-2">
-                <Lock className="text-orange-400" size={24} />
+          <section id="sec-wifi" className="md:col-span-4 bg-[#1a237e] text-white rounded-2xl p-8 shadow-xl flex flex-col justify-between">
+            <div>
+              <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+                <span className="material-symbols-outlined text-orange-400 text-3xl">wifi_password</span>
                 Conexión WiFi
               </h2>
               
-              <div className="wifi-credentials-bento">
-                <div className="wifi-credential-item">
-                  <span className="wifi-credential-label text-blue-200">NOMBRE DE RED (SSID)</span>
-                  <span className="wifi-credential-val text-white">{guide.wifiNetwork}</span>
+              <div className="space-y-6">
+                <div>
+                  <p className="font-label-caps text-label-caps text-blue-200 mb-1">NOMBRE DE RED (SSID)</p>
+                  <p className="font-headline-lg text-headline-lg font-bold">{guide.wifiNetwork}</p>
                 </div>
-                <div className="wifi-credential-item mt-4">
-                  <span className="wifi-credential-label text-blue-200">CONTRASEÑA</span>
-                  <span className="wifi-credential-val text-orange-400">{guide.wifiPassword}</span>
+                <div>
+                  <p className="font-label-caps text-label-caps text-blue-200 mb-1">CONTRASEÑA</p>
+                  <p className="font-headline-lg text-headline-lg font-bold text-orange-400">{guide.wifiPassword}</p>
                 </div>
               </div>
             </div>
             
-            <div className="wifi-qr-section-bento">
-              <div className="wifi-qr-wrapper-bento">
-                <img src={wifiQrUrl} alt="WiFi QR" className="wifi-qr-img-bento" />
+            <div className="mt-8 pt-8 border-t border-white/10 flex flex-col items-center">
+              <div className="bg-white p-3 rounded-xl mb-4">
+                <img src={wifiQrUrl} alt="WiFi QR" className="w-32 h-32 block object-contain" />
               </div>
-              <span className="wifi-qr-caption-bento text-blue-200">Escanea para Conectar</span>
+              <p className="text-xs text-blue-200">Escanea para Conectar</p>
               
-              <button onClick={handleCopyPassword} className="guest-copy-wifi-btn-bento">
-                <Copy size={16} />
+              <button onClick={handleCopyPassword} className="mt-6 w-full py-3 bg-white/10 rounded-lg text-white font-medium hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2 border-none cursor-pointer">
+                <span className="material-symbols-outlined text-sm">content_copy</span>
                 <span>{copied ? '¡Clave Copiada!' : 'Copiar Contraseña'}</span>
               </button>
             </div>
           </section>
 
           {/* Bento Card 4: Manual del Hogar (Col span 7) */}
-          <section id="sec-manuales" className="bento-card col-span-7">
-            <h2 className="bento-card-title">Manual del Hogar &amp; Servicios</h2>
-            <div className="accordion-list-manuals">
+          <section id="sec-manuales" className="md:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8">Manual del Hogar &amp; Servicios</h2>
+            <div className="space-y-4">
               
               {/* Boiler */}
               {guide.boilerInstructions.length > 0 && (
-                <div className={`accordion-item-manual ${expandedManuals.boiler ? 'active' : ''}`}>
-                  <div className="accordion-header-manual" onClick={() => toggleManual('boiler')}>
-                    <h3 className="accordion-title-manual flex items-center gap-3">
-                      <Flame size={20} className="text-orange-500" />
-                      <span>¿Cómo usar el boiler?</span>
+                <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('boiler')}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-headline-md text-headline-md flex items-center gap-3">
+                      <span className="material-symbols-outlined text-orange-500 text-3xl">water_heater</span>
+                      ¿Cómo usar el boiler?
                     </h3>
-                    <ChevronDown size={18} className="accordion-arrow" />
+                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.boiler ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    El Boiler es eléctrico y está conectado y prendido, puedes asegurarte por la pantalla LED.
+                  </p>
                   {expandedManuals.boiler && (
-                    <div className="accordion-body-manual">
-                      <ol className="manual-list-styled-bento">
+                    <div className="mt-4 pt-4 border-t border-surface-variant/35" onClick={e => e.stopPropagation()}>
+                      <ol className="list-decimal pl-5 space-y-2 font-body-md text-body-md text-on-surface-variant">
                         {guide.boilerInstructions.map((step, i) => (
                           <li key={i}>{step}</li>
                         ))}
@@ -297,17 +274,22 @@ const GuideInteractiveView = () => {
 
               {/* Trash */}
               {guide.trashInstructions && (
-                <div className={`accordion-item-manual ${expandedManuals.trash ? 'active' : ''}`}>
-                  <div className="accordion-header-manual" onClick={() => toggleManual('trash')}>
-                    <h3 className="accordion-title-manual flex items-center gap-3">
-                      <Trash2 size={20} className="text-blue-500" />
-                      <span>Basura y Contenedores</span>
+                <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('trash')}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-headline-md text-headline-md flex items-center gap-3">
+                      <span className="material-symbols-outlined text-blue-500 text-3xl">delete</span>
+                      Basura y Contenedores
                     </h3>
-                    <ChevronDown size={18} className="accordion-arrow" />
+                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.trash ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    La basura se deja en los contenedores al lado de la puerta de acceso al condominio.
+                  </p>
                   {expandedManuals.trash && (
-                    <div className="accordion-body-manual">
-                      <p className="accordion-body-text">{guide.trashInstructions}</p>
+                    <div className="mt-4 pt-4 border-t border-surface-variant/35" onClick={e => e.stopPropagation()}>
+                      <p className="font-body-md text-body-md text-on-surface-variant whitespace-pre-line">
+                        {guide.trashInstructions}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -315,17 +297,22 @@ const GuideInteractiveView = () => {
 
               {/* TV */}
               {guide.tvInstructions && (
-                <div className={`accordion-item-manual ${expandedManuals.tv ? 'active' : ''}`}>
-                  <div className="accordion-header-manual" onClick={() => toggleManual('tv')}>
-                    <h3 className="accordion-title-manual flex items-center gap-3">
-                      <Tv size={20} className="text-purple-500" />
-                      <span>Uso de Smart TV</span>
+                <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('tv')}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-headline-md text-headline-md flex items-center gap-3">
+                      <span className="material-symbols-outlined text-purple-500 text-3xl">tv</span>
+                      Uso de Smart TV
                     </h3>
-                    <ChevronDown size={18} className="accordion-arrow" />
+                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.tv ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    La TV cuenta con streaming para disfrutar tu estadía.
+                  </p>
                   {expandedManuals.tv && (
-                    <div className="accordion-body-manual">
-                      <p className="accordion-body-text">{guide.tvInstructions}</p>
+                    <div className="mt-4 pt-4 border-t border-surface-variant/35" onClick={e => e.stopPropagation()}>
+                      <p className="font-body-md text-body-md text-on-surface-variant whitespace-pre-line">
+                        {guide.tvInstructions}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -333,9 +320,9 @@ const GuideInteractiveView = () => {
 
               {/* Notes */}
               {guide.additionalInstructions && (
-                <div className="notes-box-bento">
-                  <h4 className="notes-box-title text-purple-600">NOTAS IMPORTANTE ADICIONALES</h4>
-                  <p className="notes-box-text">{guide.additionalInstructions}</p>
+                <div className="p-6 rounded-xl bg-purple-50 border border-purple-100 mt-6">
+                  <h4 className="font-label-caps text-label-caps text-purple-600 mb-2">NOTAS IMPORTANTES</h4>
+                  <p className="font-body-md text-body-md text-on-surface-variant">{guide.additionalInstructions}</p>
                 </div>
               )}
 
@@ -344,16 +331,16 @@ const GuideInteractiveView = () => {
 
           {/* Bento Card 5: Servicios Incluidos (Col span 5) */}
           {guide.amenities.length > 0 && (
-            <section id="sec-amenidades" className="bento-card col-span-5 bg-surface-lowest">
-              <h2 className="bento-card-title flex items-center gap-2">
-                <Sparkles className="text-secondary" size={24} />
+            <section id="sec-amenidades" className="md:col-span-5 bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-surface-container">
+              <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-3xl">star</span>
                 Servicios Incluidos
               </h2>
-              <div className="amenities-grid-bento">
+              <div className="grid grid-cols-1 gap-4">
                 {guide.amenities.map((item, idx) => (
-                  <div key={idx} className="amenity-item-bento">
-                    <CheckCircle size={16} className="text-secondary" />
-                    <span className="amenity-text-bento">{item}</span>
+                  <div key={idx} className="flex items-center gap-3 p-4 rounded-lg bg-surface border border-surface-variant">
+                    <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <span className="font-body-md text-body-md">{item}</span>
                   </div>
                 ))}
               </div>
@@ -361,38 +348,38 @@ const GuideInteractiveView = () => {
           )}
 
           {/* Bento Card 6: Reglas de la Casa (Col span 6) */}
-          <section id="sec-reglas" className="bento-card col-span-6">
-            <h2 className="bento-card-title flex items-center gap-2">
-              <ShieldAlert className="text-error" size={24} />
+          <section id="sec-reglas" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+              <span className="material-symbols-outlined text-error text-3xl">report</span>
               Reglas de la Casa
             </h2>
             
-            <div className="rules-badges-row-bento">
-              <span className="rule-badge-bento bg-error-container">
+            <div className="flex flex-wrap gap-2 mb-8">
+              <span className="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-caps text-[10px] uppercase">
                 Mascotas: {guide.petsAllowed ? 'Permitidas' : 'Prohibidas'}
               </span>
-              <span className="rule-badge-bento bg-error-container">
+              <span className="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-caps text-[10px] uppercase">
                 Fiestas: {guide.eventsAllowed ? 'Permitidas' : 'Prohibidas'}
               </span>
-              <span className="rule-badge-bento bg-error-container">
+              <span className="px-4 py-2 bg-error-container text-on-error-container rounded-full font-label-caps text-[10px] uppercase">
                 Fumar: {guide.smokingAllowed ? 'Permitido' : 'Prohibido'}
               </span>
             </div>
 
-            <div className="warning-banner-bento bg-yellow-50">
-              <Users size={20} className="text-yellow-600" />
+            <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl mb-6 flex items-center gap-4">
+              <span className="material-symbols-outlined text-yellow-600 text-2xl">person_add</span>
               <div>
-                <p className="warning-banner-title text-yellow-800">Capacidad máxima:</p>
-                <p className="warning-banner-desc text-yellow-700">{guide.maxGuests} personas en total.</p>
+                <p className="font-body-md text-body-md font-bold text-yellow-800">Capacidad máxima:</p>
+                <p className="text-yellow-700">{guide.maxGuests} personas en total.</p>
               </div>
             </div>
 
             {guide.additionalRules.length > 0 && (
-              <div className="additional-rules-list-bento">
+              <div className="space-y-4">
                 {guide.additionalRules.map((rule, idx) => (
-                  <div key={idx} className="additional-rule-item-bento">
-                    <span className="bullet-rule bg-error"></span>
-                    <p className="rule-text-bento">{rule}</p>
+                  <div key={idx} className="flex items-start gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-error mt-2 flex-shrink-0"></span>
+                    <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">{rule}</p>
                   </div>
                 ))}
               </div>
@@ -401,26 +388,26 @@ const GuideInteractiveView = () => {
 
           {/* Bento Card 7: Tareas de Salida (Col span 6) */}
           {guide.checkoutSteps.length > 0 && (
-            <section id="sec-checkout" className="bento-card col-span-6">
-              <h2 className="bento-card-title flex items-center gap-2">
-                <CheckCircle className="text-primary-color" size={24} />
+            <section id="sec-checkout" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+              <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-3xl">fact_check</span>
                 Tareas de Salida (Checkout)
               </h2>
-              <p className="checkout-subtitle-bento">
-                Por favor, realice estas tareas antes de su salida a las <span className="font-bold text-primary-color">{guide.checkOutTime}</span>
+              <p className="font-body-md text-body-md text-on-surface-variant mb-6 italic">
+                Por favor, realice estas tareas antes de su salida a las <span className="font-bold text-primary">{guide.checkOutTime}</span>
               </p>
 
-              <div className="checkout-checklist-bento">
+              <div className="space-y-4">
                 {guide.checkoutSteps.map((step, idx) => (
                   <div 
                     key={idx} 
-                    className={`checkout-checklist-item-bento ${checkedSteps[idx] ? 'checked' : ''}`}
+                    className={`flex items-center gap-4 p-4 rounded-xl border border-surface-variant hover:bg-surface transition-colors cursor-pointer ${checkedSteps[idx] ? 'opacity-50' : ''}`}
                     onClick={() => toggleStep(idx)}
                   >
-                    <div className="checkout-checkbox-bento">
-                      {checkedSteps[idx] && <Check size={14} color="white" />}
+                    <div className={`w-6 h-6 rounded-full border-2 border-surface-variant flex items-center justify-center transition-all ${checkedSteps[idx] ? 'bg-primary border-primary' : ''}`}>
+                      {checkedSteps[idx] && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
                     </div>
-                    <span className="checkout-checklist-text-bento">{step}</span>
+                    <span className={`font-body-md text-body-md ${checkedSteps[idx] ? 'line-through text-on-surface-variant' : ''}`}>{step}</span>
                   </div>
                 ))}
               </div>
@@ -428,43 +415,48 @@ const GuideInteractiveView = () => {
           )}
 
           {/* Bento Card 8: Fotos de la Propiedad (Col span 12) */}
-          <section id="sec-fotos" className="bento-card col-span-12">
-            <h2 className="bento-card-title flex items-center gap-2">
-              <Image className="text-primary-color" size={24} />
+          <section id="sec-fotos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-3xl">imagesmode</span>
               Fotos de la Propiedad
             </h2>
             
-            <div className="gallery-grid-bento">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="aspect-square rounded-xl overflow-hidden bg-surface-container-low border-2 border-dashed border-surface-variant flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container-high transition-colors group">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant group-hover:scale-110 transition-transform">add_a_photo</span>
+                <span className="font-label-caps text-label-caps text-on-surface-variant mt-2">Subir Foto</span>
+              </div>
+
               {guide.photos.map((photo, idx) => (
-                <div key={idx} className="gallery-photo-wrapper-bento">
-                  <img src={photo} alt={`Propiedad ${idx + 1}`} className="gallery-photo-bento" />
+                <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-surface-container border border-surface-variant">
+                  <img src={photo} alt={`Propiedad ${idx + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
-              
-              <div className="gallery-photo-add-bento">
-                <Sparkles size={28} className="text-primary-color" />
-                <span className="gallery-photo-add-text">Ver más fotos</span>
-              </div>
+              {guide.photos.length === 0 && Array.from({ length: 4 }).map((_, idx) => (
+                <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-surface-container border border-surface-variant bg-gray-100 flex items-center justify-center text-gray-300">
+                  <span className="material-symbols-outlined text-4xl">image</span>
+                </div>
+              ))}
             </div>
           </section>
 
-          {/* Contactos & Emergencias (Col span 12) */}
-          <section id="sec-contactos" className="bento-card col-span-12 contacts-card-bento">
-            <h2 className="bento-card-title flex items-center gap-2">
-              <Phone className="text-primary-color" size={24} />
+          {/* Bento Card 9: Contactos & Emergencias (Col span 12) */}
+          <section id="sec-contactos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-3xl">support_agent</span>
               Contactos &amp; Emergencias
             </h2>
             
-            <div className="contact-actions-grid-bento">
-              <a href={`tel:${guide.hostPhone}`} className="contact-btn-bento host-call-bento">
-                <span className="contact-btn-label-bento">Llamar al Anfitrión</span>
-                <span className="contact-btn-name-bento">{guide.hostName}</span>
-                <span className="contact-btn-num-bento">{guide.hostPhone}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a href={`tel:${guide.hostPhone}`} className="flex flex-col justify-center items-center gap-2 p-6 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-100 transition-all text-center text-decoration-none">
+                <span className="font-label-caps text-label-caps uppercase">Llamar al Anfitrión</span>
+                <span className="font-headline-lg text-headline-lg font-bold">{guide.hostName}</span>
+                <span className="font-body-md text-body-md font-semibold">{guide.hostPhone || "4421851478"}</span>
               </a>
-              <a href="tel:911" className="contact-btn-bento emergency-call-bento">
-                <span className="contact-btn-label-bento">Servicios de Emergencia</span>
-                <span className="contact-btn-name-bento">Policía / Ambulancia</span>
-                <span className="contact-btn-num-bento">911</span>
+              <a href="tel:911" className="flex flex-col justify-center items-center gap-2 p-6 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 transition-all text-center text-decoration-none">
+                <span className="font-label-caps text-label-caps uppercase">Servicios de Emergencia</span>
+                <span className="font-headline-lg text-headline-lg font-bold">Policía / Urgencias</span>
+                <span className="font-body-md text-body-md font-semibold">911</span>
               </a>
             </div>
           </section>
@@ -473,50 +465,49 @@ const GuideInteractiveView = () => {
       </main>
 
       {/* ── SUPPORT FAB ── */}
-      <div className="support-fab-container">
-        <button onClick={() => scrollToSection('sec-contactos')} className="support-fab-btn" title="¿Necesitas Ayuda?">
-          <MessageSquare size={24} />
-          <span className="support-fab-label">¿Necesitas Ayuda?</span>
+      <div className="fixed bottom-24 right-8 z-50">
+        <button onClick={() => scrollToSection('sec-contactos')} className="bg-primary text-on-primary w-16 h-16 rounded-full shadow-2xl flex items-center justify-center group active:scale-90 transition-all border-none cursor-pointer">
+          <span className="material-symbols-outlined text-3xl">chat_bubble</span>
+          <span className="absolute right-full mr-4 bg-on-surface text-surface px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">¿Necesitas Ayuda?</span>
         </button>
       </div>
 
-      {/* ── MOBILE BOTTOM NAVIGATION (Only visible on Mobile screens) ── */}
-      <nav className="mobile-bottom-nav">
-        <button onClick={() => scrollToSection('sec-acceso')} className="mobile-nav-btn active">
-          <DoorOpen size={20} />
-          <span className="mobile-nav-label">INICIO</span>
+      {/* ── MOBILE BOTTOM NAVIGATION ── */}
+      <nav className="fixed bottom-0 w-full z-50 bg-surface border-t border-surface-variant h-16 flex justify-around items-center pb-safe md:hidden">
+        <button onClick={() => scrollToSection('sec-acceso')} className="flex flex-col items-center justify-center text-primary font-bold bg-transparent border-none cursor-pointer">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+          <span className="font-label-caps text-[10px]">INICIO</span>
         </button>
-        <button onClick={() => scrollToSection('sec-wifi')} className="mobile-nav-btn">
-          <Lock size={20} />
-          <span className="mobile-nav-label">WIFI</span>
+        <button onClick={() => scrollToSection('sec-wifi')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
+          <span className="material-symbols-outlined">wifi</span>
+          <span className="font-label-caps text-[10px]">WIFI</span>
         </button>
-        <button onClick={() => scrollToSection('sec-manuales')} className="mobile-nav-btn">
-          <BookOpen size={20} />
-          <span className="mobile-nav-label">MANUAL</span>
+        <button onClick={() => scrollToSection('sec-manuales')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
+          <span className="material-symbols-outlined">menu_book</span>
+          <span className="font-label-caps text-[10px]">MANUAL</span>
         </button>
-        <button onClick={() => scrollToSection('sec-contactos')} className="mobile-nav-btn">
-          <Phone size={20} />
-          <span className="mobile-nav-label">AYUDA</span>
+        <button onClick={() => scrollToSection('sec-contactos')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
+          <span className="material-symbols-outlined">support_agent</span>
+          <span className="font-label-caps text-[10px]">AYUDA</span>
         </button>
       </nav>
 
-      {/* ── FOOTER DE DISEÑO PROFESIONAL (RÉPLICA PDF) ── */}
-      <footer className="guest-brand-footer">
-        <div className="guest-brand-footer-left">
-          <div className="guest-brand-social-row">
-            <img src="/images/hospitalidad-digital-logo.png" alt="Hospitalidad Digital Logo" className="guest-brand-footer-logo" />
-            <div className="guest-brand-social-icons">
-              <a href="https://facebook.com/coanfitrionesmexico" target="_blank" rel="noreferrer" className="guest-brand-social-link"><FacebookIcon /></a>
-              <a href="https://instagram.com/coanfitrionesmexico" target="_blank" rel="noreferrer" className="guest-brand-social-link"><InstagramIcon /></a>
-              <a href="https://bsky.app" target="_blank" rel="noreferrer" className="guest-brand-social-link"><BlueskyIcon /></a>
-            </div>
+      {/* ── FOOTER DE DISEÑO PROFESIONAL ── */}
+      <footer className="bg-surface-container-high px-margin-mobile md:px-margin-desktop mt-12 py-8">
+        <div className="max-w-container-max mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-on-surface font-body-md font-semibold">
+            Operado por <a className="text-primary hover:underline text-decoration-none" href="https://hospitalidad-digital.vercel.app" target="_blank" rel="noreferrer">Hospitalidad Digital</a>
           </div>
-          <span className="guest-brand-website">coanfitrionesmexico.com.mx</span>
+          <div className="flex items-center gap-6 text-on-surface-variant">
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">face</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">menu_book</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">photo_camera</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">video_library</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">public</span></a>
+          </div>
         </div>
-        <div className="guest-brand-footer-right">
-          <span className="guest-brand-phone">Tel: {guide.hostPhone || '4421851478'}</span>
-          <span className="guest-brand-confidential">Este documento digital es confidencial y de uso exclusivo del huésped.</span>
-          <span className="guest-brand-date">Actualizado el {formattedDate}</span>
+        <div className="max-w-container-max mx-auto pt-6 mt-6 border-t border-surface-variant/30 text-center text-[10px] text-on-surface-variant opacity-60">
+          © 2026 CoHost Admin México. Todos los derechos reservados.
         </div>
       </footer>
     </div>
