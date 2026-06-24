@@ -162,7 +162,7 @@ const ControlAdministrativo = () => {
         <div>
           <h2 className="page-title">Control Administrativo</h2>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '14px' }}>
-            RPC Consulting · Vista Gerencial · Ricardo Peña Covarrubias · 442 131 4203
+            RPC Consulting · Vista Gerencial · Ricardo Peña Covarrubias · 442 185 1478
           </p>
         </div>
       </div>
@@ -306,7 +306,7 @@ const ControlAdministrativo = () => {
             </div>
             <div style={{ textAlign: 'right', fontSize: '13px', opacity: 0.9 }}>
               <div style={{ fontWeight: 600 }}>Ricardo Peña Covarrubias</div>
-              <div>442 131 4203</div>
+              <div>442 185 1478</div>
             </div>
           </div>
 

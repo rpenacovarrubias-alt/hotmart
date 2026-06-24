@@ -1,0 +1,75 @@
+/* Print and PDF generation styles */
+
+.pdf-view-wrapper {
+  background-color: #F8FAFC;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+.pdf-container {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  background: white;
+  margin: 0 auto;
+}
+
+/* Three columns photo grid for Page 2 */
+.photos-grid.three-cols {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 12px !important;
+}
+
+.photos-grid.three-cols .photo-wrapper {
+  height: 150px !important;
+}
+
+/* Print CSS overrides */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .pdf-view-wrapper {
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .pdf-container {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Page Break constraints */
+  .pdf-page-break {
+    page-break-after: always !important;
+    break-after: page !important;
+    height: 100% !important;
+    min-height: 297mm !important; /* A4 height */
+    padding: 20mm 15mm !important; /* Page Margins */
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Prevent split of components */
+  .manual-box, .rule-card, .amenity-item, .contact-card, .wifi-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Ensure background colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

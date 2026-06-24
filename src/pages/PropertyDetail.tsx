@@ -28,12 +28,21 @@ const PropertyDetail = () => {
           </button>
           <h2 className="page-title" style={{ margin: 0 }}>Ficha Técnica</h2>
         </div>
-        <button
-          className="btn-outline"
-          onClick={() => navigate(`/propiedades/${id}/editar`)}
-        >
-          Editar Propiedad
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            className="btn-outline"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1.5px solid var(--primary)', color: 'var(--primary)' }}
+            onClick={() => navigate(`/propiedades/${id}/guia`)}
+          >
+            Ver Guía de Huéspedes
+          </button>
+          <button
+            className="btn-outline"
+            onClick={() => navigate(`/propiedades/${id}/editar`)}
+          >
+            Editar Propiedad
+          </button>
+        </div>
       </div>
 
       <div className="property-card" style={{ padding: '0', overflow: 'hidden' }}>

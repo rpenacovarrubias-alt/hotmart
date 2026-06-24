@@ -180,14 +180,34 @@ const AddPropertyModal = ({ onAdd, onClose }: Props) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">URL imagen de portada</label>
-            <input
-              type="text"
-              className="form-input"
-              value={imageUrl}
-              onChange={e => handleImageChange(e.target.value)}
-              placeholder="https://..."
-            />
+            <label className="form-label">Imagen de portada</label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <input
+                type="text"
+                className="form-input"
+                style={{ flex: 1 }}
+                value={imageUrl}
+                onChange={e => handleImageChange(e.target.value)}
+                placeholder="URL de la imagen o selecciona un archivo..."
+              />
+              <div style={{ position: 'relative', overflow: 'hidden' }}>
+                <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      handleImageChange(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Preview en tiempo real */}

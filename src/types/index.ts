@@ -141,3 +141,69 @@ export interface AdminControlRecord {
   notes?: string;
   periodType?: 'Semanal' | 'Mensual' | 'Trimestral' | 'Anual';
 }
+
+export interface WelcomeGuide {
+  id: string;
+  propertyId?: string;
+  name: string;
+  type: string;
+  bedrooms: number;
+  beds: number;
+  bathrooms: number;
+  maxGuests: number;
+  location: string;
+  address: string;
+  airbnbUrl: string;
+  airbnbId: string;
+  imageUrl: string;
+  
+  // WiFi
+  wifiNetwork: string;
+  wifiPassword: string;
+  
+  // Contact
+  hostName: string;
+  hostPhone: string;
+  hostEmail?: string;
+  
+  // Welcome & Inclusions
+  welcomeMessage: string;
+  inclusions: string[];
+  photos: string[]; // 3 fotos de galería
+  
+  // Access
+  checkInTime: string;
+  checkInNote: string;
+  checkOutTime: string;
+  checkOutNote: string;
+  accessInstructions: string;
+  googleMapsUrl: string;
+  
+  // Manuals
+  boilerInstructions: string[];
+  trashInstructions: string;
+  tvInstructions: string;
+  additionalInstructions: string;
+  
+  // Amenities
+  amenities: string[];
+  
+  // Rules
+  petsAllowed: boolean;
+  eventsAllowed: boolean;
+  smokingAllowed: boolean;
+  additionalRules: string[];
+  
+  // Security
+  carbonMonoxideDetector: boolean;
+  smokeDetector: boolean;
+  securityCameras: boolean;
+  
+  // Checkout
+  checkoutSteps: string[];
+  
+  // Metadata
+  createdAt: string;
+  updatedAt: string;
+}
+

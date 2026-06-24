@@ -154,13 +154,33 @@ const PropertyEdit = () => {
             </div>
 
             <div>
-              <label style={lbl}>URL Imagen de Portada</label>
-              <input
-                style={inp}
-                value={form.imageUrl}
-                onChange={e => { set('imageUrl', e.target.value); setImgError(false); }}
-                placeholder="https://..."
-              />
+              <label style={lbl}>Imagen de Portada</label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <input
+                  style={{ ...inp, flex: 1 }}
+                  value={form.imageUrl}
+                  onChange={e => { set('imageUrl', e.target.value); setImgError(false); }}
+                  placeholder="URL de la imagen o selecciona un archivo..."
+                />
+                <div style={{ position: 'relative', overflow: 'hidden' }}>
+                  <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        set('imageUrl', reader.result as string);
+                        setImgError(false);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                    style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
               {form.imageUrl && !imgError && (
                 <img
                   src={form.imageUrl}

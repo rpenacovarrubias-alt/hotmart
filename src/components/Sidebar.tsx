@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Home, CalendarCheck, Wallet, Package, Users, BarChart3, TrendingUp, Trash2, Pencil } from 'lucide-react';
+import { LayoutDashboard, Home, BookOpen, CalendarCheck, Wallet, Package, Users, BarChart3, TrendingUp, Trash2, Pencil } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const Sidebar = () => {
@@ -19,6 +19,9 @@ const Sidebar = () => {
         </NavLink>
         <NavLink to="/propiedades" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
           <Home size={20} /> Mis Propiedades
+        </NavLink>
+        <NavLink to="/guias" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <BookOpen size={20} /> Guías de Casas
         </NavLink>
         <NavLink to="/tareas" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
           <CalendarCheck size={20} /> Limpieza y Mant.
