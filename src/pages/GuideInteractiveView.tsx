@@ -64,7 +64,7 @@ const GuideInteractiveView = () => {
       {/* ── TOP NAVIGATION ── */}
       <header className="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant shadow-sm h-16 flex justify-between items-center px-margin-mobile md:px-margin-desktop">
         <button onClick={() => navigate('/guias')} className="flex items-center gap-2 text-on-surface hover:text-primary transition-colors active:scale-95 bg-transparent border-none cursor-pointer">
-          <span className="material-symbols-outlined">arrow_back</span>
+          <span translate="no" className="material-symbols-outlined notranslate">arrow_back</span>
           <span className="font-headline-md text-headline-md font-bold uppercase tracking-wider">REGRESAR</span>
         </button>
         <a href={`/guias/${guide.id}/pdf`} target="_blank" rel="noreferrer" className="bg-primary text-on-primary px-6 py-2 rounded-lg font-headline-md text-headline-md shadow-sm hover:brightness-110 active:scale-95 transition-all text-decoration-none flex items-center justify-center">
@@ -85,15 +85,15 @@ const GuideInteractiveView = () => {
             
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
-                <span className="material-symbols-outlined text-secondary-fixed">bed</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">bed</span>
                 <span className="font-body-md text-body-md">{guide.bedrooms} Dormitorios</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
-                <span className="material-symbols-outlined text-secondary-fixed">groups</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">groups</span>
                 <span className="font-body-md text-body-md">Max {guide.maxGuests} Huéspedes</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
-                <span className="material-symbols-outlined text-secondary-fixed">location_on</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">location_on</span>
                 <span className="font-body-md text-body-md">{guide.location}</span>
               </div>
             </div>
@@ -113,21 +113,21 @@ const GuideInteractiveView = () => {
             <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
               <button onClick={() => scrollToSection('sec-acceso')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">key</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">key</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Acceso</span>
               </button>
               
               <button onClick={() => scrollToSection('sec-wifi')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">wifi</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">wifi</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">WiFi</span>
               </button>
               
               <button onClick={() => scrollToSection('sec-manuales')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">menu_book</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">menu_book</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Manuales</span>
               </button>
@@ -135,7 +135,7 @@ const GuideInteractiveView = () => {
               {guide.amenities.length > 0 && (
                 <button onClick={() => scrollToSection('sec-amenidades')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                   <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500 transition-transform group-hover:scale-110">
-                    <span className="material-symbols-outlined text-3xl">home_repair_service</span>
+                    <span translate="no" className="material-symbols-outlined notranslate text-3xl">home_repair_service</span>
                   </div>
                   <span className="font-label-caps text-label-caps text-on-surface-variant">Servicios</span>
                 </button>
@@ -143,7 +143,7 @@ const GuideInteractiveView = () => {
               
               <button onClick={() => scrollToSection('sec-reglas')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">gavel</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">gavel</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Reglas</span>
               </button>
@@ -151,7 +151,7 @@ const GuideInteractiveView = () => {
               {guide.checkoutSteps.length > 0 && (
                 <button onClick={() => scrollToSection('sec-checkout')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                   <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
-                    <span className="material-symbols-outlined text-3xl">logout</span>
+                    <span translate="no" className="material-symbols-outlined notranslate text-3xl">logout</span>
                   </div>
                   <span className="font-label-caps text-label-caps text-on-surface-variant">Salida</span>
                 </button>
@@ -159,14 +159,14 @@ const GuideInteractiveView = () => {
               
               <button onClick={() => scrollToSection('sec-contactos')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">support_agent</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">support_agent</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Contacto</span>
               </button>
 
               <button onClick={() => scrollToSection('sec-fotos')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500 transition-transform group-hover:scale-110">
-                  <span className="material-symbols-outlined text-3xl">photo_camera</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">photo_camera</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Fotos</span>
               </button>
@@ -176,7 +176,7 @@ const GuideInteractiveView = () => {
           {/* Bento Card 2: Llegada y Acceso Autónomo (Col span 8) */}
           <section id="sec-acceso" className="md:col-span-8 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
             <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-3xl">sensor_door</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">sensor_door</span>
               Llegada y Acceso Autónomo
             </h2>
             
@@ -202,9 +202,9 @@ const GuideInteractiveView = () => {
 
             {guide.googleMapsUrl && (
               <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-4 border-2 border-primary-container/20 rounded-xl text-primary font-bold hover:bg-primary-container/5 transition-colors text-decoration-none">
-                <span className="material-symbols-outlined">map</span>
+                <span translate="no" className="material-symbols-outlined notranslate">map</span>
                 <span>Ubicación de la casa en Google Maps</span>
-                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-sm">open_in_new</span>
               </a>
             )}
           </section>
@@ -213,7 +213,7 @@ const GuideInteractiveView = () => {
           <section id="sec-wifi" className="md:col-span-4 bg-[#1a237e] text-white rounded-2xl p-8 shadow-xl flex flex-col justify-between">
             <div>
               <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-                <span className="material-symbols-outlined text-orange-400 text-3xl">wifi_password</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-orange-400 text-3xl">wifi_password</span>
                 Conexión WiFi
               </h2>
               
@@ -236,7 +236,7 @@ const GuideInteractiveView = () => {
               <p className="text-xs text-blue-200">Escanea para Conectar</p>
               
               <button onClick={handleCopyPassword} className="mt-6 w-full py-3 bg-white/10 rounded-lg text-white font-medium hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2 border-none cursor-pointer">
-                <span className="material-symbols-outlined text-sm">content_copy</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-sm">content_copy</span>
                 <span>{copied ? '¡Clave Copiada!' : 'Copiar Contraseña'}</span>
               </button>
             </div>
@@ -252,10 +252,10 @@ const GuideInteractiveView = () => {
                 <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('boiler')}>
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-headline-md text-headline-md flex items-center gap-3">
-                      <span className="material-symbols-outlined text-orange-500 text-3xl">water_heater</span>
+                      <span translate="no" className="material-symbols-outlined notranslate text-orange-500 text-3xl">water_heater</span>
                       ¿Cómo usar el boiler?
                     </h3>
-                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.boiler ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span translate="no" className={`material-symbols-outlined notranslate transition-transform duration-200 ${expandedManuals.boiler ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
                   <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
                     El Boiler es eléctrico y está conectado y prendido, puedes asegurarte por la pantalla LED.
@@ -277,10 +277,10 @@ const GuideInteractiveView = () => {
                 <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('trash')}>
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-headline-md text-headline-md flex items-center gap-3">
-                      <span className="material-symbols-outlined text-blue-500 text-3xl">delete</span>
+                      <span translate="no" className="material-symbols-outlined notranslate text-blue-500 text-3xl">delete</span>
                       Basura y Contenedores
                     </h3>
-                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.trash ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span translate="no" className={`material-symbols-outlined notranslate transition-transform duration-200 ${expandedManuals.trash ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
                   <p className="font-body-md text-body-md text-on-surface-variant">
                     La basura se deja en los contenedores al lado de la puerta de acceso al condominio.
@@ -300,10 +300,10 @@ const GuideInteractiveView = () => {
                 <div className="p-6 rounded-xl border border-surface-variant hover:border-primary-container transition-colors cursor-pointer group" onClick={() => toggleManual('tv')}>
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-headline-md text-headline-md flex items-center gap-3">
-                      <span className="material-symbols-outlined text-purple-500 text-3xl">tv</span>
+                      <span translate="no" className="material-symbols-outlined notranslate text-purple-500 text-3xl">tv</span>
                       Uso de Smart TV
                     </h3>
-                    <span className={`material-symbols-outlined transition-transform duration-200 ${expandedManuals.tv ? 'rotate-180' : ''}`}>expand_more</span>
+                    <span translate="no" className={`material-symbols-outlined notranslate transition-transform duration-200 ${expandedManuals.tv ? 'rotate-180' : ''}`}>expand_more</span>
                   </div>
                   <p className="font-body-md text-body-md text-on-surface-variant">
                     La TV cuenta con streaming para disfrutar tu estadía.
@@ -333,13 +333,13 @@ const GuideInteractiveView = () => {
           {guide.amenities.length > 0 && (
             <section id="sec-amenidades" className="md:col-span-5 bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-surface-container">
               <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary text-3xl">star</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-secondary text-3xl">star</span>
                 Servicios Incluidos
               </h2>
               <div className="grid grid-cols-1 gap-4">
                 {guide.amenities.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-4 rounded-lg bg-surface border border-surface-variant">
-                    <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    <span translate="no" className="material-symbols-outlined notranslate text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     <span className="font-body-md text-body-md">{item}</span>
                   </div>
                 ))}
@@ -350,7 +350,7 @@ const GuideInteractiveView = () => {
           {/* Bento Card 6: Reglas de la Casa (Col span 6) */}
           <section id="sec-reglas" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
             <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-              <span className="material-symbols-outlined text-error text-3xl">report</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-error text-3xl">report</span>
               Reglas de la Casa
             </h2>
             
@@ -367,7 +367,7 @@ const GuideInteractiveView = () => {
             </div>
 
             <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-xl mb-6 flex items-center gap-4">
-              <span className="material-symbols-outlined text-yellow-600 text-2xl">person_add</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-yellow-600 text-2xl">person_add</span>
               <div>
                 <p className="font-body-md text-body-md font-bold text-yellow-800">Capacidad máxima:</p>
                 <p className="text-yellow-700">{guide.maxGuests} personas en total.</p>
@@ -390,7 +390,7 @@ const GuideInteractiveView = () => {
           {guide.checkoutSteps.length > 0 && (
             <section id="sec-checkout" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
               <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-3xl">fact_check</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">fact_check</span>
                 Tareas de Salida (Checkout)
               </h2>
               <p className="font-body-md text-body-md text-on-surface-variant mb-6 italic">
@@ -405,7 +405,7 @@ const GuideInteractiveView = () => {
                     onClick={() => toggleStep(idx)}
                   >
                     <div className={`w-6 h-6 rounded-full border-2 border-surface-variant flex items-center justify-center transition-all ${checkedSteps[idx] ? 'bg-primary border-primary' : ''}`}>
-                      {checkedSteps[idx] && <span className="material-symbols-outlined text-white text-[14px]">check</span>}
+                      {checkedSteps[idx] && <span translate="no" className="material-symbols-outlined notranslate text-white text-[14px]">check</span>}
                     </div>
                     <span className={`font-body-md text-body-md ${checkedSteps[idx] ? 'line-through text-on-surface-variant' : ''}`}>{step}</span>
                   </div>
@@ -417,13 +417,13 @@ const GuideInteractiveView = () => {
           {/* Bento Card 8: Fotos de la Propiedad (Col span 12) */}
           <section id="sec-fotos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
             <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-3xl">imagesmode</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">imagesmode</span>
               Fotos de la Propiedad
             </h2>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <div className="aspect-square rounded-xl overflow-hidden bg-surface-container-low border-2 border-dashed border-surface-variant flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container-high transition-colors group">
-                <span className="material-symbols-outlined text-4xl text-on-surface-variant group-hover:scale-110 transition-transform">add_a_photo</span>
+                <span translate="no" className="material-symbols-outlined notranslate text-4xl text-on-surface-variant group-hover:scale-110 transition-transform">add_a_photo</span>
                 <span className="font-label-caps text-label-caps text-on-surface-variant mt-2">Subir Foto</span>
               </div>
 
@@ -434,7 +434,7 @@ const GuideInteractiveView = () => {
               ))}
               {guide.photos.length === 0 && Array.from({ length: 4 }).map((_, idx) => (
                 <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-surface-container border border-surface-variant bg-gray-100 flex items-center justify-center text-gray-300">
-                  <span className="material-symbols-outlined text-4xl">image</span>
+                  <span translate="no" className="material-symbols-outlined notranslate text-4xl">image</span>
                 </div>
               ))}
             </div>
@@ -443,7 +443,7 @@ const GuideInteractiveView = () => {
           {/* Bento Card 9: Contactos & Emergencias (Col span 12) */}
           <section id="sec-contactos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
             <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-3xl">support_agent</span>
+              <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">support_agent</span>
               Contactos &amp; Emergencias
             </h2>
             
@@ -467,7 +467,7 @@ const GuideInteractiveView = () => {
       {/* ── SUPPORT FAB ── */}
       <div className="fixed bottom-24 right-8 z-50">
         <button onClick={() => scrollToSection('sec-contactos')} className="bg-primary text-on-primary w-16 h-16 rounded-full shadow-2xl flex items-center justify-center group active:scale-90 transition-all border-none cursor-pointer">
-          <span className="material-symbols-outlined text-3xl">chat_bubble</span>
+          <span translate="no" className="material-symbols-outlined notranslate text-3xl">chat_bubble</span>
           <span className="absolute right-full mr-4 bg-on-surface text-surface px-4 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">¿Necesitas Ayuda?</span>
         </button>
       </div>
@@ -475,19 +475,19 @@ const GuideInteractiveView = () => {
       {/* ── MOBILE BOTTOM NAVIGATION ── */}
       <nav className="fixed bottom-0 w-full z-50 bg-surface border-t border-surface-variant h-16 flex justify-around items-center pb-safe md:hidden">
         <button onClick={() => scrollToSection('sec-acceso')} className="flex flex-col items-center justify-center text-primary font-bold bg-transparent border-none cursor-pointer">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+          <span translate="no" className="material-symbols-outlined notranslate" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
           <span className="font-label-caps text-[10px]">INICIO</span>
         </button>
         <button onClick={() => scrollToSection('sec-wifi')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
-          <span className="material-symbols-outlined">wifi</span>
+          <span translate="no" className="material-symbols-outlined notranslate">wifi</span>
           <span className="font-label-caps text-[10px]">WIFI</span>
         </button>
         <button onClick={() => scrollToSection('sec-manuales')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
-          <span className="material-symbols-outlined">menu_book</span>
+          <span translate="no" className="material-symbols-outlined notranslate">menu_book</span>
           <span className="font-label-caps text-[10px]">MANUAL</span>
         </button>
         <button onClick={() => scrollToSection('sec-contactos')} className="flex flex-col items-center justify-center text-on-surface-variant bg-transparent border-none cursor-pointer">
-          <span className="material-symbols-outlined">support_agent</span>
+          <span translate="no" className="material-symbols-outlined notranslate">support_agent</span>
           <span className="font-label-caps text-[10px]">AYUDA</span>
         </button>
       </nav>
@@ -499,11 +499,11 @@ const GuideInteractiveView = () => {
             Operado por <a className="text-primary hover:underline text-decoration-none" href="https://hospitalidad-digital.vercel.app" target="_blank" rel="noreferrer">Hospitalidad Digital</a>
           </div>
           <div className="flex items-center gap-6 text-on-surface-variant">
-            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">face</span></a>
-            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">menu_book</span></a>
-            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">photo_camera</span></a>
-            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">video_library</span></a>
-            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span className="material-symbols-outlined">public</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span translate="no" className="material-symbols-outlined notranslate">face</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span translate="no" className="material-symbols-outlined notranslate">menu_book</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span translate="no" className="material-symbols-outlined notranslate">photo_camera</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span translate="no" className="material-symbols-outlined notranslate">video_library</span></a>
+            <a className="hover:text-primary transition-colors text-inherit text-decoration-none" href="#"><span translate="no" className="material-symbols-outlined notranslate">public</span></a>
           </div>
         </div>
         <div className="max-w-container-max mx-auto pt-6 mt-6 border-t border-surface-variant/30 text-center text-[10px] text-on-surface-variant opacity-60">
