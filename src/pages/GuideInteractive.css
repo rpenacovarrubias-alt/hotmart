@@ -358,3 +358,38 @@
     padding-bottom: 88px;
   }
 }
+
+/* Missing Tailwind classes mappings */
+.interactive-guide-wrapper .border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.interactive-guide-wrapper .bg-\[\#1a237e\] {
+  background-color: #1a237e;
+}
+.interactive-guide-wrapper .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.interactive-guide-wrapper .border-primary-container\/20 {
+  border-color: rgba(255, 90, 95, 0.2);
+}
+.interactive-guide-wrapper .hover\:bg-primary-container\/5:hover {
+  background-color: rgba(255, 90, 95, 0.05);
+}
+.interactive-guide-wrapper .border-surface-variant\/30 {
+  border-color: rgba(226, 226, 226, 0.3);
+}
+.interactive-guide-wrapper .border-surface-variant\/35 {
+  border-color: rgba(226, 226, 226, 0.35);
+}
+.interactive-guide-wrapper .hover\:bg-white\/20:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.interactive-guide-wrapper .pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .interactive-guide-wrapper .md\:hidden {
+    display: none !important;
+  }
+}
