@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { MapPin, Key, Flame, Trash2, Check, Phone, ShieldAlert, Bed, Users, Copy, ExternalLink, Tv, BookOpen, DoorOpen, Sparkles, Lock } from 'lucide-react';
+import { 
+  ArrowLeft, MapPin, Key, Flame, Trash2, Check, Phone, 
+  ShieldAlert, Bed, Users, Copy, ExternalLink, Tv, 
+  BookOpen, DoorOpen, Sparkles, Lock, ChevronDown, 
+  MessageSquare, Image, CheckCircle
+} from 'lucide-react';
 import { toast } from 'sonner';
 import './GuideInteractive.css';
 
@@ -27,11 +32,26 @@ const BlueskyIcon = () => (
 
 const GuideInteractiveView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { guides } = useApp();
 
   const guide = guides.find(g => g.id === id);
   const [copied, setCopied] = useState(false);
   const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({});
+  
+  // Accordion State for Manuales
+  const [expandedManuals, setExpandedManuals] = useState<Record<string, boolean>>({
+    boiler: true,
+    trash: false,
+    tv: false,
+  });
+
+  const toggleManual = (section: string) => {
+    setExpandedManuals(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -73,319 +93,412 @@ const GuideInteractiveView = () => {
 
   return (
     <div className="interactive-guide-wrapper">
-      {/* ── HEADER NAVIGATION ── */}
+      {/* ── TOP NAVIGATION ── */}
       <header className="guest-header">
         <div className="guest-header-inner">
-          <div className="guest-brand">
-            <svg className="guest-logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-              <path fill="#1B6CB5" d="M22,82 C20,70 24,58 32,52 L32,38 C32,33 35,31 38,31 C41,31 44,33 44,38 L44,48 L44,34 C44,29 47,27 50,27 C53,27 56,29 56,34 L56,48 L56,36 C56,31 59,29 62,29 C65,29 68,31 68,36 L68,52 L68,44 C68,39 71,37 74,37 C77,37 80,39 80,44 L80,62 C82,60 86,62 86,68 C86,74 82,78 78,80 L68,90 C62,96 52,98 42,98 C32,98 24,94 20,88Z"/>
-              <path fill="white" d="M42,76 C42,68 34,60 34,52 C34,46 38,44 42,48 C44,50 45,53 46,55 C47,53 48,50 50,48 C54,44 58,46 58,52 C58,60 50,68 50,76Z"/>
-              <circle cx="30" cy="26" r="8" fill="none" stroke="white" stroke-width="2.5"/>
-              <line x1="35" y1="31" x2="54" y2="50" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            </svg>
-            <span className="guest-brand-name">Coanfitriones México</span>
-          </div>
+          <button onClick={() => navigate('/guias')} className="guest-back-btn">
+            <ArrowLeft size={18} />
+            <span className="guest-back-text">REGRESAR</span>
+          </button>
           <a href={`/guias/${guide.id}/pdf`} target="_blank" rel="noreferrer" className="btn-pdf-download">
             Guardar PDF
           </a>
         </div>
       </header>
 
-      {/* ── HERO BANNER ── */}
-      <section className="guest-hero-section" style={{ backgroundImage: `linear-gradient(to bottom, rgba(15,23,42,0.85), rgba(15,23,42,0.95)), url(${guide.imageUrl})` }}>
-        <div className="guest-hero-content">
-          <span className="guest-hero-eyebrow">Guía de Uso Digital</span>
-          <h1 className="guest-hero-title">{guide.name}</h1>
-          
-          <div className="guest-hero-badges">
-            <span className="guest-badge"><Bed size={14} /> {guide.bedrooms} Dormitorios</span>
-            <span className="guest-badge"><Users size={14} /> Max {guide.maxGuests} Huéspedes</span>
-            <span className="guest-badge"><MapPin size={14} /> {guide.location}</span>
-          </div>
-
-          <p className="guest-hero-desc">{guide.welcomeMessage}</p>
-        </div>
-      </section>
-
       <main className="guest-main-container">
-        {/* ── CUADRÍCULA DE ACCESOS RÁPIDOS ── */}
-        <div className="guest-quick-nav-card">
-          <h3 className="quick-nav-title">Accesos Rápidos</h3>
-          <div className="quick-nav-grid">
-            <button onClick={() => scrollToSection('sec-acceso')} className="quick-nav-item">
-              <div className="quick-nav-icon-circle accent-blue" title="Acceso (Llave)">
-                <Key size={22} />
-              </div>
-              <span className="quick-nav-text">Acceso</span>
-            </button>
+        {/* ── HERO BANNER ── */}
+        <section className="guest-hero-section" style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.85) 100%), url(${guide.imageUrl})` }}>
+          <div className="guest-hero-content">
+            <span className="guest-hero-eyebrow">GUÍA DE USO DIGITAL</span>
+            <h1 className="guest-hero-title">{guide.name}</h1>
             
-            <button onClick={() => scrollToSection('sec-wifi')} className="quick-nav-item">
-              <div className="quick-nav-icon-circle accent-orange" title="WiFi (Cerradura)">
-                <Lock size={22} />
-              </div>
-              <span className="quick-nav-text">WiFi</span>
-            </button>
-            
-            <button onClick={() => scrollToSection('sec-manuales')} className="quick-nav-item">
-              <div className="quick-nav-icon-circle accent-purple" title="Manuales">
-                <BookOpen size={22} />
-              </div>
-              <span className="quick-nav-text">Manuales</span>
-            </button>
-            
-            {guide.amenities.length > 0 && (
-              <button onClick={() => scrollToSection('sec-amenidades')} className="quick-nav-item">
-                <div className="quick-nav-icon-circle accent-green" title="Servicios">
-                  <Sparkles size={22} />
+            <div className="guest-hero-badges">
+              <span className="guest-badge">
+                <Bed size={16} className="text-secondary-fixed" />
+                <span>{guide.bedrooms} Dormitorios</span>
+              </span>
+              <span className="guest-badge">
+                <Users size={16} className="text-secondary-fixed" />
+                <span>Max {guide.maxGuests} Huéspedes</span>
+              </span>
+              <span className="guest-badge">
+                <MapPin size={16} className="text-secondary-fixed" />
+                <span>{guide.location}</span>
+              </span>
+            </div>
+
+            <p className="guest-hero-desc">{guide.welcomeMessage}</p>
+          </div>
+        </section>
+
+        {/* ── BENTO GRID SECTIONS ── */}
+        <div className="guest-bento-grid">
+          
+          {/* Bento Card 1: Accesos Rápidos (Col span 12) */}
+          <section className="bento-card col-span-12">
+            <h2 className="bento-card-title">Accesos Rápidos</h2>
+            <div className="quick-nav-grid-bento">
+              <button onClick={() => scrollToSection('sec-acceso')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-blue-50 text-blue-500">
+                  <Key size={24} />
                 </div>
-                <span className="quick-nav-text">Servicios</span>
+                <span className="quick-nav-label-bento">Acceso</span>
               </button>
-            )}
-            
-            <button onClick={() => scrollToSection('sec-reglas')} className="quick-nav-item">
-              <div className="quick-nav-icon-circle accent-red" title="Reglas">
-                <ShieldAlert size={22} />
-              </div>
-              <span className="quick-nav-text">Reglas</span>
-            </button>
-            
-            {guide.checkoutSteps.length > 0 && (
-              <button onClick={() => scrollToSection('sec-checkout')} className="quick-nav-item">
-                <div className="quick-nav-icon-circle accent-coral" title="Salida (Puerta)">
-                  <DoorOpen size={22} />
+              
+              <button onClick={() => scrollToSection('sec-wifi')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-orange-50 text-orange-500">
+                  <Lock size={24} />
                 </div>
-                <span className="quick-nav-text">Salida</span>
+                <span className="quick-nav-label-bento">WiFi</span>
               </button>
-            )}
-            
-            <button onClick={() => scrollToSection('sec-contactos')} className="quick-nav-item">
-              <div className="quick-nav-icon-circle accent-cyan" title="Contactos">
-                <Phone size={22} />
-              </div>
-              <span className="quick-nav-text">Contactos</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── ACCESO Y LLEGADA ── */}
-        <section id="sec-acceso" className="guest-section-card">
-          <h2 className="guest-section-title">
-            <Key className="section-title-icon" color="var(--primary-color)" />
-            Llegada y Acceso Autónomo
-          </h2>
-          
-          <div className="guest-access-times">
-            <div className="time-block check-in">
-              <span className="time-label">Check-in</span>
-              <span className="time-value">{guide.checkInTime}</span>
-              <span className="time-sub">{guide.checkInNote}</span>
-            </div>
-            <div className="time-block check-out">
-              <span className="time-label">Check-out</span>
-              <span className="time-value">{guide.checkOutTime}</span>
-              <span className="time-sub">{guide.checkOutNote}</span>
-            </div>
-          </div>
-
-          <div className="guest-info-block">
-            <h4>Instrucciones para Entrar</h4>
-            <p style={{ whiteSpace: 'pre-line' }}>{guide.accessInstructions}</p>
-          </div>
-
-          {guide.googleMapsUrl && (
-            <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="guest-maps-btn">
-              <MapPin size={18} />
-              Abrir Dirección en Google Maps
-              <ExternalLink size={14} />
-            </a>
-          )}
-        </section>
-
-        {/* ── WIFI ── */}
-        <section id="sec-wifi" className="guest-section-card guest-wifi-card">
-          <div className="guest-wifi-info-panel">
-            <h2 className="guest-section-title" style={{ color: 'white' }}>
-              <Lock className="section-title-icon" color="#FBBF24" />
-              Conexión WiFi
-            </h2>
-            
-            <div className="wifi-credential-row">
-              <div className="wifi-field">
-                <span className="wifi-label">Nombre de Red (SSID)</span>
-                <span className="wifi-value">{guide.wifiNetwork}</span>
-              </div>
-              <div className="wifi-field" style={{ marginTop: '16px' }}>
-                <span className="wifi-label">Contraseña (WPA/WPA2)</span>
-                <span className="wifi-value password">{guide.wifiPassword}</span>
-              </div>
-            </div>
-
-            <button onClick={handleCopyPassword} className="guest-copy-wifi-btn">
-              <Copy size={16} />
-              {copied ? '¡Clave Copiada!' : 'Copiar Contraseña'}
-            </button>
-          </div>
-          
-          <div className="guest-wifi-qr-panel">
-            <div className="wifi-qr-bg">
-              <img src={wifiQrUrl} alt="WiFi QR" className="wifi-qr-img" />
-            </div>
-            <span className="wifi-qr-caption">Escanea para Conectar</span>
-          </div>
-        </section>
-
-        {/* ── MANUALES ── */}
-        <section id="sec-manuales" className="guest-section-card">
-          <h2 className="guest-section-title">
-            <BookOpen className="section-title-icon" color="var(--primary-color)" />
-            Manual del Hogar & Servicios
-          </h2>
-
-          {guide.boilerInstructions.length > 0 && (
-            <div className="guest-manual-box">
-              <h4>
-                <Flame size={18} style={{ color: '#EF4444' }} />
-                ¿Cómo usar el boiler/calentador de agua?
-              </h4>
-              <ol className="manual-list-styled">
-                {guide.boilerInstructions.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
-            </div>
-          )}
-
-          {guide.trashInstructions && (
-            <div className="guest-manual-box">
-              <h4>
-                <Trash2 size={18} style={{ color: '#1B6CB5' }} />
-                Tirado de Basura y Contenedores
-              </h4>
-              <p>{guide.trashInstructions}</p>
-            </div>
-          )}
-
-          {guide.tvInstructions && (
-            <div className="guest-manual-box">
-              <h4>
-                <Tv size={18} style={{ color: '#7C3AED' }} />
-                Uso de Smart TV y Streaming
-              </h4>
-              <p>{guide.tvInstructions}</p>
-            </div>
-          )}
-
-          {guide.additionalInstructions && (
-            <div className="guest-manual-box" style={{ background: '#FAF5FF', border: '1px solid #E9D5FF' }}>
-              <h4 style={{ color: '#7C3AED' }}>Notas Importantes Adicionales</h4>
-              <p style={{ color: '#5B21B6' }}>{guide.additionalInstructions}</p>
-            </div>
-          )}
-        </section>
-
-        {/* ── AMENIDADES ── */}
-        {guide.amenities.length > 0 && (
-          <section id="sec-amenidades" className="guest-section-card">
-            <h2 className="guest-section-title">
-              <Sparkles className="section-title-icon" color="var(--guide-success, #00A699)" />
-              Servicios Incluidos
-            </h2>
-            <div className="guest-amenities-grid">
-              {guide.amenities.map((item, idx) => (
-                <div key={idx} className="guest-amenity-pill">
-                  <Check size={14} color="#00A699" />
-                  <span>{item}</span>
+              
+              <button onClick={() => scrollToSection('sec-manuales')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-purple-50 text-purple-500">
+                  <BookOpen size={24} />
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── REGLAS DE CASA ── */}
-        <section id="sec-reglas" className="guest-section-card">
-          <h2 className="guest-section-title">
-            <ShieldAlert className="section-title-icon" color="#EF4444" />
-            Reglas de la Casa
-          </h2>
-          
-          <div className="guest-rules-tag-row">
-            <span className={`guest-rule-badge ${guide.petsAllowed ? 'yes' : 'no'}`}>
-              Mascotas: {guide.petsAllowed ? 'Permitidas' : 'Prohibidas'}
-            </span>
-            <span className={`guest-rule-badge ${guide.eventsAllowed ? 'yes' : 'no'}`}>
-              Fiestas / Eventos: {guide.eventsAllowed ? 'Permitidos' : 'Prohibidos'}
-            </span>
-            <span className={`guest-rule-badge ${guide.smokingAllowed ? 'yes' : 'no'}`}>
-              Fumar: {guide.smokingAllowed ? 'Permitido' : 'Prohibido'}
-            </span>
-          </div>
-
-          <div className="guest-warning-banner">
-            <Users size={18} />
-            <span>Capacidad máxima establecida: <strong>{guide.maxGuests} personas</strong> en total.</span>
-          </div>
-
-          {guide.additionalRules.length > 0 && (
-            <div style={{ marginTop: '20px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px' }}>Normas de Convivencia Detalladas</h4>
-              <ul className="guest-rules-list-dot">
-                {guide.additionalRules.map((rule, idx) => (
-                  <li key={idx}>{rule}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </section>
-
-        {/* ── INTERACTIVE CHECKOUT CHECKLIST ── */}
-        {guide.checkoutSteps.length > 0 && (
-          <section id="sec-checkout" className="guest-section-card">
-            <h2 className="guest-section-title">
-              <DoorOpen className="section-title-icon" color="var(--primary-color)" />
-              Tareas de Salida (Checkout)
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Por favor, realiza estas tareas antes de tu salida a las <strong>{guide.checkOutTime}</strong> para ayudarnos a mantener la propiedad impecable.
-            </p>
-
-            <div className="guest-checkout-checklist">
-              {guide.checkoutSteps.map((step, idx) => (
-                <div 
-                  key={idx} 
-                  className={`guest-checklist-item ${checkedSteps[idx] ? 'checked' : ''}`}
-                  onClick={() => toggleStep(idx)}
-                >
-                  <div className="guest-checkbox">
-                    {checkedSteps[idx] && <Check size={14} color="white" />}
+                <span className="quick-nav-label-bento">Manuales</span>
+              </button>
+              
+              {guide.amenities.length > 0 && (
+                <button onClick={() => scrollToSection('sec-amenidades')} className="quick-nav-item-bento">
+                  <div className="quick-nav-circle bg-green-50 text-green-500">
+                    <Sparkles size={24} />
                   </div>
-                  <span className="guest-checklist-text">{step}</span>
+                  <span className="quick-nav-label-bento">Servicios</span>
+                </button>
+              )}
+              
+              <button onClick={() => scrollToSection('sec-reglas')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-red-50 text-red-500">
+                  <ShieldAlert size={24} />
                 </div>
-              ))}
+                <span className="quick-nav-label-bento">Reglas</span>
+              </button>
+              
+              {guide.checkoutSteps.length > 0 && (
+                <button onClick={() => scrollToSection('sec-checkout')} className="quick-nav-item-bento">
+                  <div className="quick-nav-circle bg-rose-50 text-rose-500">
+                    <DoorOpen size={24} />
+                  </div>
+                  <span className="quick-nav-label-bento">Salida</span>
+                </button>
+              )}
+              
+              <button onClick={() => scrollToSection('sec-contactos')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-cyan-50 text-cyan-500">
+                  <Phone size={24} />
+                </div>
+                <span className="quick-nav-label-bento">Contacto</span>
+              </button>
+
+              <button onClick={() => scrollToSection('sec-fotos')} className="quick-nav-item-bento">
+                <div className="quick-nav-circle bg-purple-50 text-purple-500">
+                  <Image size={24} />
+                </div>
+                <span className="quick-nav-label-bento">Fotos</span>
+              </button>
             </div>
           </section>
-        )}
 
-        {/* ── SEGURIDAD Y CONTACTOS ── */}
-        <section id="sec-contactos" className="guest-section-card" style={{ marginBottom: '40px' }}>
-          <h2 className="guest-section-title">
-            <Phone className="section-title-icon" color="var(--primary-color)" />
-            Contactos & Emergencias
-          </h2>
-          
-          <div className="guest-contact-actions">
-            <a href={`tel:${guide.hostPhone}`} className="guest-contact-button host-call">
-              <span className="btn-label">Llamar al Anfitrión</span>
-              <span className="btn-name">{guide.hostName}</span>
-              <span className="btn-num">{guide.hostPhone}</span>
-            </a>
-            <a href="tel:911" className="guest-contact-button emergency-call">
-              <span className="btn-label">Servicios de Emergencia</span>
-              <span className="btn-name">Policía / Ambulancia</span>
-              <span className="btn-num">911</span>
-            </a>
-          </div>
-        </section>
+          {/* Bento Card 2: Llegada y Acceso Autónomo (Col span 8) */}
+          <section id="sec-acceso" className="bento-card col-span-8">
+            <h2 className="bento-card-title flex items-center gap-2">
+              <DoorOpen className="text-primary-color" size={24} />
+              Llegada y Acceso Autónomo
+            </h2>
+            
+            <div className="guest-access-times-bento">
+              <div className="time-block-bento bg-blue-50 border-blue-100">
+                <span className="time-label-bento text-blue-600">Entrada (Check-in)</span>
+                <span className="time-value-bento">{guide.checkInTime}</span>
+                <span className="time-sub-bento text-blue-400">{guide.checkInNote}</span>
+              </div>
+              <div className="time-block-bento bg-green-50 border-green-100">
+                <span className="time-label-bento text-green-600">Salida (Check-out)</span>
+                <span className="time-value-bento">{guide.checkOutTime}</span>
+                <span className="time-sub-bento text-green-400">{guide.checkOutNote}</span>
+              </div>
+            </div>
+
+            <div className="guest-info-block-bento">
+              <h3 className="guest-info-block-title text-primary-color">Instrucciones para Entrar</h3>
+              <p className="guest-info-block-text">{guide.accessInstructions}</p>
+            </div>
+
+            {guide.googleMapsUrl && (
+              <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="guest-maps-btn-bento">
+                <MapPin size={18} />
+                <span>Ubicación de la casa en Google Maps</span>
+                <ExternalLink size={14} />
+              </a>
+            )}
+          </section>
+
+          {/* Bento Card 3: WiFi (Col span 4) */}
+          <section id="sec-wifi" className="bento-card col-span-4 wifi-dark-card">
+            <div className="wifi-dark-card-inner">
+              <h2 className="bento-card-title text-white flex items-center gap-2">
+                <Lock className="text-orange-400" size={24} />
+                Conexión WiFi
+              </h2>
+              
+              <div className="wifi-credentials-bento">
+                <div className="wifi-credential-item">
+                  <span className="wifi-credential-label text-blue-200">NOMBRE DE RED (SSID)</span>
+                  <span className="wifi-credential-val text-white">{guide.wifiNetwork}</span>
+                </div>
+                <div className="wifi-credential-item mt-4">
+                  <span className="wifi-credential-label text-blue-200">CONTRASEÑA</span>
+                  <span className="wifi-credential-val text-orange-400">{guide.wifiPassword}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="wifi-qr-section-bento">
+              <div className="wifi-qr-wrapper-bento">
+                <img src={wifiQrUrl} alt="WiFi QR" className="wifi-qr-img-bento" />
+              </div>
+              <span className="wifi-qr-caption-bento text-blue-200">Escanea para Conectar</span>
+              
+              <button onClick={handleCopyPassword} className="guest-copy-wifi-btn-bento">
+                <Copy size={16} />
+                <span>{copied ? '¡Clave Copiada!' : 'Copiar Contraseña'}</span>
+              </button>
+            </div>
+          </section>
+
+          {/* Bento Card 4: Manual del Hogar (Col span 7) */}
+          <section id="sec-manuales" className="bento-card col-span-7">
+            <h2 className="bento-card-title">Manual del Hogar &amp; Servicios</h2>
+            <div className="accordion-list-manuals">
+              
+              {/* Boiler */}
+              {guide.boilerInstructions.length > 0 && (
+                <div className={`accordion-item-manual ${expandedManuals.boiler ? 'active' : ''}`}>
+                  <div className="accordion-header-manual" onClick={() => toggleManual('boiler')}>
+                    <h3 className="accordion-title-manual flex items-center gap-3">
+                      <Flame size={20} className="text-orange-500" />
+                      <span>¿Cómo usar el boiler?</span>
+                    </h3>
+                    <ChevronDown size={18} className="accordion-arrow" />
+                  </div>
+                  {expandedManuals.boiler && (
+                    <div className="accordion-body-manual">
+                      <ol className="manual-list-styled-bento">
+                        {guide.boilerInstructions.map((step, i) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Trash */}
+              {guide.trashInstructions && (
+                <div className={`accordion-item-manual ${expandedManuals.trash ? 'active' : ''}`}>
+                  <div className="accordion-header-manual" onClick={() => toggleManual('trash')}>
+                    <h3 className="accordion-title-manual flex items-center gap-3">
+                      <Trash2 size={20} className="text-blue-500" />
+                      <span>Basura y Contenedores</span>
+                    </h3>
+                    <ChevronDown size={18} className="accordion-arrow" />
+                  </div>
+                  {expandedManuals.trash && (
+                    <div className="accordion-body-manual">
+                      <p className="accordion-body-text">{guide.trashInstructions}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TV */}
+              {guide.tvInstructions && (
+                <div className={`accordion-item-manual ${expandedManuals.tv ? 'active' : ''}`}>
+                  <div className="accordion-header-manual" onClick={() => toggleManual('tv')}>
+                    <h3 className="accordion-title-manual flex items-center gap-3">
+                      <Tv size={20} className="text-purple-500" />
+                      <span>Uso de Smart TV</span>
+                    </h3>
+                    <ChevronDown size={18} className="accordion-arrow" />
+                  </div>
+                  {expandedManuals.tv && (
+                    <div className="accordion-body-manual">
+                      <p className="accordion-body-text">{guide.tvInstructions}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notes */}
+              {guide.additionalInstructions && (
+                <div className="notes-box-bento">
+                  <h4 className="notes-box-title text-purple-600">NOTAS IMPORTANTE ADICIONALES</h4>
+                  <p className="notes-box-text">{guide.additionalInstructions}</p>
+                </div>
+              )}
+
+            </div>
+          </section>
+
+          {/* Bento Card 5: Servicios Incluidos (Col span 5) */}
+          {guide.amenities.length > 0 && (
+            <section id="sec-amenidades" className="bento-card col-span-5 bg-surface-lowest">
+              <h2 className="bento-card-title flex items-center gap-2">
+                <Sparkles className="text-secondary" size={24} />
+                Servicios Incluidos
+              </h2>
+              <div className="amenities-grid-bento">
+                {guide.amenities.map((item, idx) => (
+                  <div key={idx} className="amenity-item-bento">
+                    <CheckCircle size={16} className="text-secondary" />
+                    <span className="amenity-text-bento">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Bento Card 6: Reglas de la Casa (Col span 6) */}
+          <section id="sec-reglas" className="bento-card col-span-6">
+            <h2 className="bento-card-title flex items-center gap-2">
+              <ShieldAlert className="text-error" size={24} />
+              Reglas de la Casa
+            </h2>
+            
+            <div className="rules-badges-row-bento">
+              <span className="rule-badge-bento bg-error-container">
+                Mascotas: {guide.petsAllowed ? 'Permitidas' : 'Prohibidas'}
+              </span>
+              <span className="rule-badge-bento bg-error-container">
+                Fiestas: {guide.eventsAllowed ? 'Permitidas' : 'Prohibidas'}
+              </span>
+              <span className="rule-badge-bento bg-error-container">
+                Fumar: {guide.smokingAllowed ? 'Permitido' : 'Prohibido'}
+              </span>
+            </div>
+
+            <div className="warning-banner-bento bg-yellow-50">
+              <Users size={20} className="text-yellow-600" />
+              <div>
+                <p className="warning-banner-title text-yellow-800">Capacidad máxima:</p>
+                <p className="warning-banner-desc text-yellow-700">{guide.maxGuests} personas en total.</p>
+              </div>
+            </div>
+
+            {guide.additionalRules.length > 0 && (
+              <div className="additional-rules-list-bento">
+                {guide.additionalRules.map((rule, idx) => (
+                  <div key={idx} className="additional-rule-item-bento">
+                    <span className="bullet-rule bg-error"></span>
+                    <p className="rule-text-bento">{rule}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Bento Card 7: Tareas de Salida (Col span 6) */}
+          {guide.checkoutSteps.length > 0 && (
+            <section id="sec-checkout" className="bento-card col-span-6">
+              <h2 className="bento-card-title flex items-center gap-2">
+                <CheckCircle className="text-primary-color" size={24} />
+                Tareas de Salida (Checkout)
+              </h2>
+              <p className="checkout-subtitle-bento">
+                Por favor, realice estas tareas antes de su salida a las <span className="font-bold text-primary-color">{guide.checkOutTime}</span>
+              </p>
+
+              <div className="checkout-checklist-bento">
+                {guide.checkoutSteps.map((step, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`checkout-checklist-item-bento ${checkedSteps[idx] ? 'checked' : ''}`}
+                    onClick={() => toggleStep(idx)}
+                  >
+                    <div className="checkout-checkbox-bento">
+                      {checkedSteps[idx] && <Check size={14} color="white" />}
+                    </div>
+                    <span className="checkout-checklist-text-bento">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Bento Card 8: Fotos de la Propiedad (Col span 12) */}
+          <section id="sec-fotos" className="bento-card col-span-12">
+            <h2 className="bento-card-title flex items-center gap-2">
+              <Image className="text-primary-color" size={24} />
+              Fotos de la Propiedad
+            </h2>
+            
+            <div className="gallery-grid-bento">
+              {guide.photos.map((photo, idx) => (
+                <div key={idx} className="gallery-photo-wrapper-bento">
+                  <img src={photo} alt={`Propiedad ${idx + 1}`} className="gallery-photo-bento" />
+                </div>
+              ))}
+              
+              <div className="gallery-photo-add-bento">
+                <Sparkles size={28} className="text-primary-color" />
+                <span className="gallery-photo-add-text">Ver más fotos</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Contactos & Emergencias (Col span 12) */}
+          <section id="sec-contactos" className="bento-card col-span-12 contacts-card-bento">
+            <h2 className="bento-card-title flex items-center gap-2">
+              <Phone className="text-primary-color" size={24} />
+              Contactos &amp; Emergencias
+            </h2>
+            
+            <div className="contact-actions-grid-bento">
+              <a href={`tel:${guide.hostPhone}`} className="contact-btn-bento host-call-bento">
+                <span className="contact-btn-label-bento">Llamar al Anfitrión</span>
+                <span className="contact-btn-name-bento">{guide.hostName}</span>
+                <span className="contact-btn-num-bento">{guide.hostPhone}</span>
+              </a>
+              <a href="tel:911" className="contact-btn-bento emergency-call-bento">
+                <span className="contact-btn-label-bento">Servicios de Emergencia</span>
+                <span className="contact-btn-name-bento">Policía / Ambulancia</span>
+                <span className="contact-btn-num-bento">911</span>
+              </a>
+            </div>
+          </section>
+
+        </div>
       </main>
+
+      {/* ── SUPPORT FAB ── */}
+      <div className="support-fab-container">
+        <button onClick={() => scrollToSection('sec-contactos')} className="support-fab-btn" title="¿Necesitas Ayuda?">
+          <MessageSquare size={24} />
+          <span className="support-fab-label">¿Necesitas Ayuda?</span>
+        </button>
+      </div>
+
+      {/* ── MOBILE BOTTOM NAVIGATION (Only visible on Mobile screens) ── */}
+      <nav className="mobile-bottom-nav">
+        <button onClick={() => scrollToSection('sec-acceso')} className="mobile-nav-btn active">
+          <DoorOpen size={20} />
+          <span className="mobile-nav-label">INICIO</span>
+        </button>
+        <button onClick={() => scrollToSection('sec-wifi')} className="mobile-nav-btn">
+          <Lock size={20} />
+          <span className="mobile-nav-label">WIFI</span>
+        </button>
+        <button onClick={() => scrollToSection('sec-manuales')} className="mobile-nav-btn">
+          <BookOpen size={20} />
+          <span className="mobile-nav-label">MANUAL</span>
+        </button>
+        <button onClick={() => scrollToSection('sec-contactos')} className="mobile-nav-btn">
+          <Phone size={20} />
+          <span className="mobile-nav-label">AYUDA</span>
+        </button>
+      </nav>
 
       {/* ── FOOTER DE DISEÑO PROFESIONAL (RÉPLICA PDF) ── */}
       <footer className="guest-brand-footer">
