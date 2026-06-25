@@ -7,7 +7,7 @@ import FinancialControl from '../components/FinancialControl';
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { properties, tasks } = useApp();
+  const { properties, tasks, stays: allStays } = useApp();
 
   const property = properties.find(p => p.id === id);
 
@@ -15,6 +15,31 @@ const PropertyDetail = () => {
 
   const pendingTasksCount = tasks.filter(t => t.propertyId === id && t.status !== 'Completado').length;
   const monthlyIncome = mockIncomes.filter(i => i.propertyId === id).reduce((acc, curr) => acc + curr.grossIncome, 0);
+
+  // Occupancy: nights occupied this month ÷ days in month
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const nightsThisMonth = allStays
+    .filter(s => {
+      if (s.propertyId !== id) return false;
+      const d = new Date(s.date);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    })
+    .reduce((acc, s) => acc + s.nights, 0);
+  const occupancyPct = Math.min(100, Math.round((nightsThisMonth / daysInMonth) * 100));
+
+  // Next check-in: earliest future stay date
+  const todayStr = now.toISOString().split('T')[0];
+  const nextStay = allStays
+    .filter(s => s.propertyId === id && s.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const nextCheckinLabel = (() => {
+    if (!nextStay) return '—';
+    const diff = Math.round((new Date(nextStay.date).getTime() - new Date(todayStr).getTime()) / (1000 * 3600 * 24));
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Mañana';
+    return `${diff} días`;
+  })();
 
   return (
     <div>
@@ -28,21 +53,12 @@ const PropertyDetail = () => {
           </button>
           <h2 className="page-title" style={{ margin: 0 }}>Ficha Técnica</h2>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            className="btn-outline"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1.5px solid var(--primary)', color: 'var(--primary)' }}
-            onClick={() => navigate(`/propiedades/${id}/guia`)}
-          >
-            Ver Guía de Huéspedes
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() => navigate(`/propiedades/${id}/editar`)}
-          >
-            Editar Propiedad
-          </button>
-        </div>
+        <button
+          className="btn-outline"
+          onClick={() => navigate(`/propiedades/${id}/editar`)}
+        >
+          Editar Propiedad
+        </button>
       </div>
 
       <div className="property-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -92,7 +108,7 @@ const PropertyDetail = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
               <div style={{ background: 'var(--bg-color)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Ocupación</div>
-                <div style={{ fontSize: '20px', fontWeight: 700 }}>75%</div>
+                <div style={{ fontSize: '20px', fontWeight: 700 }}>{occupancyPct}%</div>
               </div>
               <div style={{ background: 'var(--bg-color)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Ingresos</div>
@@ -104,7 +120,7 @@ const PropertyDetail = () => {
               </div>
               <div style={{ background: 'var(--bg-color)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Próx. Check-in</div>
-                <div style={{ fontSize: '20px', fontWeight: 700 }}>2 días</div>
+                <div style={{ fontSize: '20px', fontWeight: 700 }}>{nextCheckinLabel}</div>
               </div>
             </div>
 

@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '../hooks/usePermissions';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer,
@@ -75,6 +77,15 @@ const KpiCard = ({ label, value, sub, color, icon }: { label: string; value: str
 );
 
 const ControlAdministrativo = () => {
+  const { canView, currentUser } = usePermissions();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser && !canView('users')) {
+      navigate('/', { replace: true });
+    }
+  }, [currentUser, canView, navigate]);
+
   const [activeTab, setActiveTab] = useState(0);
   const [period, setPeriod] = useState('Mayo 2026');
 
@@ -162,7 +173,7 @@ const ControlAdministrativo = () => {
         <div>
           <h2 className="page-title">Control Administrativo</h2>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '14px' }}>
-            RPC Consulting · Vista Gerencial · Ricardo Peña Covarrubias · 442 185 1478
+            RPC Consulting · Vista Gerencial · Ricardo Peña Covarrubias · 442 131 4203
           </p>
         </div>
       </div>
@@ -306,7 +317,7 @@ const ControlAdministrativo = () => {
             </div>
             <div style={{ textAlign: 'right', fontSize: '13px', opacity: 0.9 }}>
               <div style={{ fontWeight: 600 }}>Ricardo Peña Covarrubias</div>
-              <div>442 185 1478</div>
+              <div>442 131 4203</div>
             </div>
           </div>
 

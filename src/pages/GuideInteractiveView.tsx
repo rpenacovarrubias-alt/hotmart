@@ -92,10 +92,17 @@ const GuideInteractiveView = () => {
                 <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">groups</span>
                 <span className="font-body-md text-body-md">Max {guide.maxGuests} Huéspedes</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
-                <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">location_on</span>
-                <span className="font-body-md text-body-md">{guide.location}</span>
-              </div>
+              {guide.googleMapsUrl ? (
+                <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-white/20 transition-colors text-decoration-none text-white active:scale-95">
+                  <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">location_on</span>
+                  <span className="font-body-md text-body-md">{guide.location}</span>
+                </a>
+              ) : (
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
+                  <span translate="no" className="material-symbols-outlined notranslate text-secondary-fixed">location_on</span>
+                  <span className="font-body-md text-body-md">{guide.location}</span>
+                </div>
+              )}
             </div>
 
             <p className="font-body-lg text-body-lg text-white mb-4 leading-relaxed max-w-3xl mx-auto drop-shadow-md">
@@ -108,15 +115,31 @@ const GuideInteractiveView = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
           
           {/* Bento Card 1: Accesos Rápidos (Col span 12) */}
-          <section className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+          <section id="sec-accesos-rapidos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
             <h2 className="font-headline-md text-headline-md mb-8">Accesos Rápidos</h2>
-            <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+            <div className="grid grid-cols-4 md:grid-cols-9 gap-4">
               <button onClick={() => scrollToSection('sec-acceso')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 transition-transform group-hover:scale-110">
                   <span translate="no" className="material-symbols-outlined notranslate text-3xl">key</span>
                 </div>
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Acceso</span>
               </button>
+
+              {guide.googleMapsUrl ? (
+                <a href={guide.googleMapsUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, cursor: 'pointer' }} className="group">
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', transition: 'transform 0.2s' }} className="group-hover:scale-110">
+                    <span translate="no" className="material-symbols-outlined notranslate" style={{ fontSize: 30 }}>location_on</span>
+                  </div>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">Ubicación</span>
+                </a>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, opacity: 0.4 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#86efac' }}>
+                    <span translate="no" className="material-symbols-outlined notranslate" style={{ fontSize: 30 }}>location_on</span>
+                  </div>
+                  <span className="font-label-caps text-label-caps text-on-surface-variant">Ubicación</span>
+                </div>
+              )}
               
               <button onClick={() => scrollToSection('sec-wifi')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 transition-transform group-hover:scale-110">
@@ -148,14 +171,12 @@ const GuideInteractiveView = () => {
                 <span className="font-label-caps text-label-caps text-on-surface-variant">Reglas</span>
               </button>
               
-              {guide.checkoutSteps.length > 0 && (
-                <button onClick={() => scrollToSection('sec-checkout')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
-                  <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
-                    <span translate="no" className="material-symbols-outlined notranslate text-3xl">logout</span>
-                  </div>
-                  <span className="font-label-caps text-label-caps text-on-surface-variant">Salida</span>
-                </button>
-              )}
+              <button onClick={() => scrollToSection('sec-checkout')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
+                <div className="w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 transition-transform group-hover:scale-110">
+                  <span translate="no" className="material-symbols-outlined notranslate text-3xl">logout</span>
+                </div>
+                <span className="font-label-caps text-label-caps text-on-surface-variant">Salida</span>
+              </button>
               
               <button onClick={() => scrollToSection('sec-contactos')} className="flex flex-col items-center gap-3 group cursor-pointer bg-transparent border-none">
                 <div className="w-14 h-14 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 transition-transform group-hover:scale-110">
@@ -207,10 +228,11 @@ const GuideInteractiveView = () => {
                 <span translate="no" className="material-symbols-outlined notranslate text-sm">open_in_new</span>
               </a>
             )}
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
           </section>
 
           {/* Bento Card 3: WiFi (Col span 4) */}
-          <section id="sec-wifi" className="md:col-span-4 bg-[#1a237e] text-white rounded-2xl p-8 shadow-xl flex flex-col justify-between">
+          <section id="sec-wifi" className="md:col-span-4 bg-[#1a237e] text-white rounded-2xl p-8 shadow-xl flex flex-col justify-between" style={{position:'relative'}}>
             <div>
               <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
                 <span translate="no" className="material-symbols-outlined notranslate text-orange-400 text-3xl">wifi_password</span>
@@ -238,6 +260,10 @@ const GuideInteractiveView = () => {
               <button onClick={handleCopyPassword} className="mt-6 w-full py-3 bg-white/10 rounded-lg text-white font-medium hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2 border-none cursor-pointer">
                 <span translate="no" className="material-symbols-outlined notranslate text-sm">content_copy</span>
                 <span>{copied ? '¡Clave Copiada!' : 'Copiar Contraseña'}</span>
+              </button>
+              <button onClick={() => scrollToSection('sec-accesos-rapidos')} className="mt-4 w-full py-2 bg-white/10 rounded-lg text-green-300 font-medium hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center gap-2 border-none cursor-pointer text-sm">
+                <span translate="no" className="material-symbols-outlined notranslate text-base">arrow_upward</span>
+                Subir
               </button>
             </div>
           </section>
@@ -327,6 +353,7 @@ const GuideInteractiveView = () => {
               )}
 
             </div>
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
           </section>
 
           {/* Bento Card 5: Servicios Incluidos (Col span 5) */}
@@ -344,6 +371,7 @@ const GuideInteractiveView = () => {
                   </div>
                 ))}
               </div>
+              <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
             </section>
           )}
 
@@ -384,23 +412,24 @@ const GuideInteractiveView = () => {
                 ))}
               </div>
             )}
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
           </section>
 
           {/* Bento Card 7: Tareas de Salida (Col span 6) */}
-          {guide.checkoutSteps.length > 0 && (
-            <section id="sec-checkout" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
-              <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
-                <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">fact_check</span>
-                Tareas de Salida (Checkout)
-              </h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mb-6 italic">
-                Por favor, realice estas tareas antes de su salida a las <span className="font-bold text-primary">{guide.checkOutTime}</span>
-              </p>
+          <section id="sec-checkout" className="md:col-span-6 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
+            <h2 className="font-headline-md text-headline-md mb-8 flex items-center gap-2">
+              <span translate="no" className="material-symbols-outlined notranslate text-primary text-3xl">fact_check</span>
+              Tareas de Salida (Checkout)
+            </h2>
+            <p className="font-body-md text-body-md text-on-surface-variant mb-6 italic">
+              Por favor, realice estas tareas antes de su salida a las <span className="font-bold text-primary">{guide.checkOutTime}</span>
+            </p>
 
+            {guide.checkoutSteps.length > 0 ? (
               <div className="space-y-4">
                 {guide.checkoutSteps.map((step, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`flex items-center gap-4 p-4 rounded-xl border border-surface-variant hover:bg-surface transition-colors cursor-pointer ${checkedSteps[idx] ? 'opacity-50' : ''}`}
                     onClick={() => toggleStep(idx)}
                   >
@@ -411,8 +440,11 @@ const GuideInteractiveView = () => {
                   </div>
                 ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <p className="font-body-md text-body-md text-on-surface-variant italic">El anfitrión completará esta sección próximamente.</p>
+            )}
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
+          </section>
 
           {/* Bento Card 8: Fotos de la Propiedad (Col span 12) */}
           <section id="sec-fotos" className="md:col-span-12 bg-white rounded-2xl p-8 shadow-sm border border-surface-container">
@@ -438,6 +470,7 @@ const GuideInteractiveView = () => {
                 </div>
               ))}
             </div>
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
           </section>
 
           {/* Bento Card 9: Contactos & Emergencias (Col span 12) */}
@@ -459,6 +492,7 @@ const GuideInteractiveView = () => {
                 <span className="font-body-md text-body-md font-semibold">911</span>
               </a>
             </div>
+            <BackToTopButton onClick={() => scrollToSection('sec-accesos-rapidos')} />
           </section>
 
         </div>
@@ -513,5 +547,18 @@ const GuideInteractiveView = () => {
     </div>
   );
 };
+
+const BackToTopButton = ({ onClick }: { onClick: () => void }) => (
+  <div className="flex justify-end mt-6 pt-4 border-t border-surface-variant/30">
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 text-green-600 border border-green-200 hover:bg-green-100 active:scale-95 transition-all text-sm font-semibold cursor-pointer border-none"
+      style={{ border: '1px solid #bbf7d0' }}
+    >
+      <span translate="no" className="material-symbols-outlined notranslate text-base">arrow_upward</span>
+      Subir
+    </button>
+  </div>
+);
 
 export default GuideInteractiveView;

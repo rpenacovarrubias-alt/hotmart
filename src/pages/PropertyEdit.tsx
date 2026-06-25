@@ -20,7 +20,7 @@ const section: React.CSSProperties = {
 const PropertyEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { properties, updateProperty, showToast } = useApp();
+  const { properties, users, updateProperty, showToast } = useApp();
 
   const property = properties.find(p => p.id === id);
 
@@ -154,33 +154,13 @@ const PropertyEdit = () => {
             </div>
 
             <div>
-              <label style={lbl}>Imagen de Portada</label>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <input
-                  style={{ ...inp, flex: 1 }}
-                  value={form.imageUrl}
-                  onChange={e => { set('imageUrl', e.target.value); setImgError(false); }}
-                  placeholder="URL de la imagen o selecciona un archivo..."
-                />
-                <div style={{ position: 'relative', overflow: 'hidden' }}>
-                  <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        set('imageUrl', reader.result as string);
-                        setImgError(false);
-                      };
-                      reader.readAsDataURL(file);
-                    }}
-                    style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                  />
-                </div>
-              </div>
+              <label style={lbl}>URL Imagen de Portada</label>
+              <input
+                style={inp}
+                value={form.imageUrl}
+                onChange={e => { set('imageUrl', e.target.value); setImgError(false); }}
+                placeholder="https://..."
+              />
               {form.imageUrl && !imgError && (
                 <img
                   src={form.imageUrl}
@@ -244,6 +224,34 @@ const PropertyEdit = () => {
           {/* Propietario */}
           <div style={section}>
             <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '20px' }}>Propietario / Contacto</h3>
+
+            {/* Selector de usuario registrado */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={lbl}>Seleccionar usuario registrado</label>
+              <select
+                style={{ ...inp, color: 'var(--text-main)' }}
+                value=""
+                onChange={e => {
+                  const u = users.find(u => u.id === e.target.value);
+                  if (u) {
+                    set('hostName', u.name);
+                    set('hostPhone', u.phone ?? '');
+                    set('hostEmail', u.email);
+                  }
+                }}
+              >
+                <option value="">— Elegir anfitrión —</option>
+                {users.filter(u => u.status === 'active').map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.role === 'host' ? 'Anfitrión' : u.role === 'admin' ? 'Admin' : u.role === 'manager' ? 'Gerente' : u.role})
+                  </option>
+                ))}
+              </select>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Al seleccionar se auto-rellenan los campos. Puedes editarlos después.
+              </p>
+            </div>
+
             <div style={{ marginBottom: '14px' }}>
               <label style={lbl}>Nombre</label>
               <input style={inp} value={form.hostName} onChange={e => set('hostName', e.target.value)} placeholder="Juan Pérez" />

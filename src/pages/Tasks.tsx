@@ -1,21 +1,31 @@
 import { useState } from 'react';
 import { Plus, CheckSquare, Trash2, ArrowRight, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { usePermissions } from '../hooks/usePermissions';
 import type { Task, TaskStatus } from '../types';
 import TaskCard from '../components/TaskCard';
 import AddTaskModal from '../components/AddTaskModal';
 
 const Tasks = () => {
   const { tasks, addTask, moveTask, deleteTask } = useApp();
+  const { canCreate, canDelete, hasPropertyAccess, isOwnTasksOnly, currentUser } = usePermissions();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectMode, setSelectMode]         = useState(false);
   const [selected, setSelected]             = useState<Set<string>>(new Set());
 
-  const byStatus = (status: TaskStatus) => tasks.filter(t => t.status === status);
+  const visibleTasks = tasks.filter(t => {
+    if (!hasPropertyAccess(t.propertyId)) return false;
+    if (isOwnTasksOnly() && currentUser && t.assignedTo !== currentUser.name) return false;
+    return true;
+  });
+
+  const byStatus = (status: TaskStatus) => visibleTasks.filter(t => t.status === status);
 
   const pendingTasks    = byStatus('Pendiente');
   const inProgressTasks = byStatus('En Progreso');
   const completedTasks  = byStatus('Completado');
+
+  const allowDelete = canDelete('tasks');
 
   const handleAddTask = (task: Task) => { addTask(task); };
 
@@ -38,6 +48,7 @@ const Tasks = () => {
   };
 
   const handleBulkDelete = () => {
+    if (!allowDelete) return;
     if (!window.confirm(`¿Eliminar ${selected.size} tarea${selected.size !== 1 ? 's' : ''} seleccionada${selected.size !== 1 ? 's' : ''}?`)) return;
     selected.forEach(id => deleteTask(id));
     exitSelectMode();
@@ -65,9 +76,11 @@ const Tasks = () => {
               <CheckSquare size={16} /> Seleccionar
             </button>
           )}
-          <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
-            <Plus size={20} /> Agregar Tarea
-          </button>
+          {canCreate('tasks') && (
+            <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
+              <Plus size={20} /> Agregar Tarea
+            </button>
+          )}
         </div>
       </div>
 
@@ -120,18 +133,22 @@ const Tasks = () => {
               <ArrowRight size={13} /> {s}
             </button>
           ))}
-          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.25)' }} />
-          <button
-            onClick={handleBulkDelete}
-            style={{
-              background: 'rgba(255,90,95,0.22)', color: '#FF8A8E', border: 'none',
-              borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
-              fontSize: '13px', fontWeight: 600, fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: '5px',
-            }}
-          >
-            <Trash2 size={13} /> Eliminar
-          </button>
+          {allowDelete && (
+            <>
+              <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.25)' }} />
+              <button
+                onClick={handleBulkDelete}
+                style={{
+                  background: 'rgba(255,90,95,0.22)', color: '#FF8A8E', border: 'none',
+                  borderRadius: '8px', padding: '6px 14px', cursor: 'pointer',
+                  fontSize: '13px', fontWeight: 600, fontFamily: 'inherit',
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                }}
+              >
+                <Trash2 size={13} /> Eliminar
+              </button>
+            </>
+          )}
         </div>
       )}
 

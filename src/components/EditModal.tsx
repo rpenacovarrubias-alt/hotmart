@@ -442,30 +442,10 @@ const EditModal = () => {
       </div>
 
       <div style={field}>
-        <label style={lbl}>Imagen de portada</label>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <input style={{ ...inp(), flex: 1 }} value={propForm.imageUrl}
-            onChange={e => { setPropForm(f => ({ ...f, imageUrl: e.target.value })); setImgError(false); }}
-            placeholder="URL de la imagen o selecciona un archivo..." />
-          <div style={{ position: 'relative', overflow: 'hidden' }}>
-            <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setPropForm(f => ({ ...f, imageUrl: reader.result as string }));
-                  setImgError(false);
-                };
-                reader.readAsDataURL(file);
-              }}
-              style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-            />
-          </div>
-        </div>
+        <label style={lbl}>URL imagen de portada</label>
+        <input style={inp()} value={propForm.imageUrl}
+          onChange={e => { setPropForm(f => ({ ...f, imageUrl: e.target.value })); setImgError(false); }}
+          placeholder="https://..." />
         {propForm.imageUrl && !imgError && (
           <img src={propForm.imageUrl} alt="Preview" onError={() => setImgError(true)}
             style={{ marginTop: 8, width: '100%', height: 110, objectFit: 'cover', borderRadius: 8 }} />

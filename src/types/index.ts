@@ -45,7 +45,18 @@ export interface Task {
   cost?: number;
 }
 
-export type UserRole = 'admin' | 'manager' | 'host' | 'cleaning_staff' | 'maintenance_staff';
+export type UserRole = 'admin' | 'manager' | 'host' | 'cohost' | 'cleaning_staff' | 'maintenance_staff';
+
+export type DashboardWidget =
+  | 'kpi_properties'
+  | 'kpi_tasks'
+  | 'kpi_expenses'
+  | 'kpi_users'
+  | 'chart_income'
+  | 'chart_costs'
+  | 'chart_margin'
+  | 'table_tasks'
+  | 'table_stays';
 
 export interface AppUser {
   id: string;
@@ -58,6 +69,8 @@ export interface AppUser {
   status: 'active' | 'inactive';
   lastLogin?: string;
   createdAt: string;
+  dashboardWidgets?: DashboardWidget[];
+  passwordHash?: string;  // PBKDF2-SHA256 hex; undefined = not yet set
 }
 
 export type ExpenseCategory = 'cleaning' | 'maintenance' | 'supplies' | 'platform_fee' | 'utilities' | 'repairs' | 'other';
@@ -101,8 +114,23 @@ export interface Stay {
   id: string;
   propertyId: string;
   stayNumber: number;
-  date: string;
+  date: string;            // fecha de llegada (check-in)
+  checkOut?: string;       // fecha de salida
+  guestName?: string;      // nombre del huésped
   nights: number;
+  nightlyRate?: number;    // tarifa por noche
+  // El huésped pagó — breakdown
+  guestTotal?: number;
+  guestRoomTariff?: number;
+  guestServiceFee?: number;
+  guestOccupationTax?: number;
+  // Tú ganas — breakdown
+  hostTotal?: number;
+  hostServiceFeeAmount?: number;
+  lodgingTaxLiquidated?: number;
+  ivaRetained?: number;
+  isrRetained?: number;
+  // Financial calculation fields
   registeredIncome: number;
   incomeMode: 'BEFORE' | 'AFTER';
   airbnbCommission: number;
@@ -113,6 +141,7 @@ export interface Stay {
   extraExpenses: number;
   netProfit: number;
   notes?: string;
+  calcMode?: 'TRADITIONAL' | 'MANUAL' | 'PFISICA' | 'SINDATOSFISCALES' | 'FUERASINFCTR' | 'FUERACONFCTR';
 }
 
 export interface ExtraExpense {
@@ -142,6 +171,73 @@ export interface AdminControlRecord {
   periodType?: 'Semanal' | 'Mensual' | 'Trimestral' | 'Anual';
 }
 
+// ── Inventory ─────────────────────────────────────────────────────────────────
+export interface InventoryCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isCustom?: boolean;
+}
+
+export interface InventoryItem {
+  id: string;
+  categoryId: string;
+  propertyId: string;
+  name: string;
+  quantity: number;
+  unit?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+// ── Custom Report Builder ─────────────────────────────────────────────────────
+export interface ReportMetric {
+  key: string;
+  label: string;
+  category: string;
+  isPercent?: boolean;
+}
+
+export interface ReportRow {
+  propertyId: string;
+  propertyName: string;
+  [key: string]: number | string;
+}
+
+export interface ReportConfig {
+  selectedMetrics: ReportMetric[];
+  propertyIds: string[];
+  propertyNames: string[];
+  periodLabel: string;
+  vizType: 'table' | 'bar' | 'line' | 'pie';
+}
+
+// ── Airbnb Reviews ─────────────────────────────────────────────────────────────
+export interface AirbnbReview {
+  id: string;
+  listingId: string;
+  propertyName: string;
+  rating: 5;
+  comments: string;
+  reviewerName: string;
+  createdAt: string;
+  language: string;
+}
+
+export interface AirbnbSession {
+  token: string;
+  savedAt: string;
+}
+
+export interface ReviewsState {
+  reviews: AirbnbReview[];
+  lastFetchedAt: string | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// ── Welcome Guide (new guide system) ─────────────────────────────────────────
 export interface WelcomeGuide {
   id: string;
   propertyId?: string;
@@ -156,54 +252,107 @@ export interface WelcomeGuide {
   airbnbUrl: string;
   airbnbId: string;
   imageUrl: string;
-  
-  // WiFi
   wifiNetwork: string;
   wifiPassword: string;
-  
-  // Contact
   hostName: string;
   hostPhone: string;
   hostEmail?: string;
-  
-  // Welcome & Inclusions
   welcomeMessage: string;
   inclusions: string[];
-  photos: string[]; // 3 fotos de galería
-  
-  // Access
+  photos: string[];
   checkInTime: string;
   checkInNote: string;
   checkOutTime: string;
   checkOutNote: string;
   accessInstructions: string;
   googleMapsUrl: string;
-  
-  // Manuals
   boilerInstructions: string[];
   trashInstructions: string;
   tvInstructions: string;
   additionalInstructions: string;
-  
-  // Amenities
   amenities: string[];
-  
-  // Rules
   petsAllowed: boolean;
   eventsAllowed: boolean;
   smokingAllowed: boolean;
   additionalRules: string[];
-  
-  // Security
   carbonMonoxideDetector: boolean;
   smokeDetector: boolean;
   securityCameras: boolean;
-  
-  // Checkout
   checkoutSteps: string[];
-  
-  // Metadata
   createdAt: string;
   updatedAt: string;
 }
 
+// ── Property Guide (legacy) ───────────────────────────────────────────────────
+export interface PropertyGuide {
+  id: string;
+  propertyId?: string;
+
+  // Identification
+  propertyName: string;
+  propertyType: string;
+  airbnbCustomLink?: string;
+  address: string;
+  mapsUrl?: string;
+  description: string;
+
+  // Images (base64 DataURL)
+  logoDataUrl?: string;
+  footerDataUrl?: string;
+  imageDataUrls: string[];
+
+  // Capacity
+  bedrooms: number;
+  bathrooms: number;
+  beds: number;
+  maxGuests: number;
+  priceMin?: number;
+  priceMax?: number;
+
+  // Access
+  checkinStart: string;
+  checkinEnd: string;
+  checkoutTime: string;
+  checkinMethod: string;
+  accessCode?: string;
+  directions: string;
+
+  // WiFi & Tech
+  wifiNetwork: string;
+  wifiPassword: string;
+  tvNotes?: string;
+
+  // Home Manual
+  boilerNotes?: string;
+  garbageNotes?: string;
+  houseManualExtra?: string;
+
+  // Amenities
+  amenities: string[];
+
+  // Rules
+  petsAllowed: boolean;
+  eventsAllowed: boolean;
+  smokingAllowed: boolean;
+  silenceHours?: string;
+  additionalRules?: string;
+
+  // Safety
+  coMonoxideDetector: boolean;
+  smokeAlarm: boolean;
+  securityCamera: boolean;
+  safetyNotes?: string;
+
+  // Checkout
+  checkoutInstructions: string[];
+
+  // Contacts
+  hostName?: string;
+  hostPhone?: string;
+  emergencyPhone?: string;
+  cancellationPolicy?: string;
+
+  // Meta
+  createdAt: string;
+  updatedAt: string;
+}

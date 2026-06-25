@@ -1,13 +1,19 @@
-import { useState } from 'react';
-import { Plus, Filter, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Filter, X, KeyRound } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
+import { usePermissions } from '../hooks/usePermissions';
 import type { AppUser, UserRole } from '../types';
+import { usePagination } from '../hooks/usePagination';
+import PaginationBar from '../components/PaginationBar';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 const roleDisplay: Record<UserRole, { label: string; color: string; bg: string }> = {
   admin:             { label: 'Administrador', color: '#FFFFFF', bg: '#222222' },
   manager:           { label: 'Gerente',       color: '#FFFFFF', bg: '#4A4A4A' },
   host:              { label: 'Anfitrión',     color: '#00A699', bg: 'rgba(0, 166, 153, 0.1)' },
+  cohost:            { label: 'Co-anfitrión',  color: '#6B5BFF', bg: 'rgba(107, 91, 255, 0.1)' },
   cleaning_staff:    { label: 'Limpieza',      color: '#FC642D', bg: 'rgba(252, 100, 45, 0.1)' },
   maintenance_staff: { label: 'Mantenimiento', color: '#FF5A5F', bg: 'rgba(255, 90, 95, 0.1)' },
 };
@@ -38,16 +44,27 @@ const DEFAULT_FORM: UserForm = {
 
 const Team = () => {
   const { users, properties, addUser, updateUser, toggleUserStatus } = useApp();
+  const { canCreate, canEdit, canView, currentUser } = usePermissions();
+  const navigate = useNavigate();
+  const canManageUsers = canCreate('users') || canEdit('users');
 
-  const [roleFilter, setRoleFilter]     = useState<string>('all');
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editingUser, setEditingUser]   = useState<AppUser | null>(null);
+  useEffect(() => {
+    if (currentUser && !canView('users')) {
+      navigate('/', { replace: true });
+    }
+  }, [currentUser, canView, navigate]);
+
+  const [roleFilter, setRoleFilter]         = useState<string>('all');
+  const [addModalOpen, setAddModalOpen]     = useState(false);
+  const [editingUser, setEditingUser]       = useState<AppUser | null>(null);
+  const [resetPwUser, setResetPwUser]       = useState<AppUser | null>(null);
   const [form, setForm]                 = useState<UserForm>(DEFAULT_FORM);
   const [errors, setErrors]             = useState<Record<string, string>>({});
   const [avatarPhotoMode, setAvatarPhotoMode] = useState<'url' | 'upload'>('url');
   const [preloadPropertyId, setPreloadPropertyId] = useState<string>('');
 
   const filteredUsers = roleFilter === 'all' ? users : users.filter(u => u.role === roleFilter);
+  const userPag = usePagination(filteredUsers, 'team_users');
 
   // ── Open modals ──────────────────────────────────────────────────────────────
   const openAdd = () => {
@@ -225,6 +242,7 @@ const Team = () => {
             <option value="admin">Administrador</option>
             <option value="manager">Gerente</option>
             <option value="host">Anfitrión</option>
+            <option value="cohost">Co-anfitrión</option>
             <option value="cleaning_staff">Personal de Limpieza</option>
             <option value="maintenance_staff">Personal de Mantenimiento</option>
           </select>
@@ -401,10 +419,12 @@ const Team = () => {
     <div>
       <div className="page-header">
         <h2 className="page-title">Gestión de Usuarios</h2>
-        <button className="btn-primary" onClick={openAdd}>
-          <Plus size={20} />
-          Agregar Usuario
-        </button>
+        {canManageUsers && (
+          <button className="btn-primary" onClick={openAdd}>
+            <Plus size={20} />
+            Agregar Usuario
+          </button>
+        )}
       </div>
 
       <div className="property-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -412,13 +432,14 @@ const Team = () => {
           <Filter size={18} color="var(--text-muted)" />
           <select
             value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value)}
+            onChange={e => { setRoleFilter(e.target.value); userPag.resetPage(); }}
             style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
           >
             <option value="all">Todos los Roles</option>
             <option value="admin">Administrador</option>
             <option value="manager">Gerente</option>
             <option value="host">Anfitrión</option>
+            <option value="cohost">Co-anfitrión</option>
             <option value="cleaning_staff">Limpieza</option>
             <option value="maintenance_staff">Mantenimiento</option>
           </select>
@@ -437,7 +458,7 @@ const Team = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map(user => (
+              {userPag.paginated.map(user => (
                 <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '14px' }}>
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -472,27 +493,43 @@ const Team = () => {
                     </span>
                   </td>
                   <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                    <button
-                      onClick={() => openEdit(user)}
-                      style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, marginRight: '12px' }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => {
-                        toggleUserStatus(user.id);
-                        toast.success(`${user.name} ${user.status === 'active' ? 'desactivado' : 'activado'}`);
-                      }}
-                      style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
-                    >
-                      {user.status === 'active' ? 'Desactivar' : 'Activar'}
-                    </button>
+                    {canManageUsers ? (
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => openEdit(user)}
+                          style={{ color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          Editar
+                        </button>
+                        {currentUser?.role === 'admin' && (
+                          <button
+                            onClick={() => setResetPwUser(user)}
+                            title="Restablecer contraseña"
+                            style={{ color: '#6B5BFF', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <KeyRound size={14} /> Contraseña
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            toggleUserStatus(user.id);
+                            toast.success(`${user.name} ${user.status === 'active' ? 'desactivado' : 'activado'}`);
+                          }}
+                          style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          {user.status === 'active' ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Solo lectura</span>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <PaginationBar {...userPag} />
       </div>
 
       {/* Modal — Agregar Usuario */}
@@ -519,6 +556,15 @@ const Team = () => {
             {renderForm(handleSaveEdit, 'Guardar Cambios', false)}
           </div>
         </div>
+      )}
+
+      {/* Modal — Restablecer Contraseña (solo admin) */}
+      {resetPwUser && (
+        <ChangePasswordModal
+          targetUser={resetPwUser}
+          isAdminReset={true}
+          onClose={() => setResetPwUser(null)}
+        />
       )}
     </div>
   );

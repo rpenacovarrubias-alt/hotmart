@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { mockProperties, mockTasks, mockExpenses, mockAdminControl, mockUsers } from '../data/mockData';
-import type { Property, Task, TaskStatus, Expense, AdminControlRecord, AppUser, WelcomeGuide } from '../types';
+import { mockProperties, mockTasks, mockExpenses, mockAdminControl, mockUsers, mockInventoryCategories, mockInventoryItems } from '../data/mockData';
+import { SEED_USERS } from '../data/seedUsers';
+import { hashPassword } from '../utils/password';
+import type { Property, Task, TaskStatus, Expense, AdminControlRecord, AppUser, Stay, PropertyConfig, InventoryCategory, InventoryItem, WelcomeGuide, AirbnbSession, ReviewsState } from '../types';
+import { loadSession, saveSession, clearSession, saveReviewsCache, loadReviewsCache, fetchReviewsByUrls } from '../utils/airbnbFetcher';
+import { LISTING_URLS } from '../config/listings';
 
 // ── Delete modal ──────────────────────────────────────────────────────────────
 export type DeleteCategory = 'propiedad' | 'gasto' | 'tarea' | 'reporte';
@@ -27,17 +31,13 @@ interface AppContextType {
   expenses: Expense[];
   adminRecords: AdminControlRecord[];
   users: AppUser[];
-  guides: WelcomeGuide[];
+  propertyConfigs: PropertyConfig[];
+  upsertPropertyConfig: (c: PropertyConfig) => void;
 
   // Property ops
   addProperty: (p: Property) => void;
   updateProperty: (p: Property) => void;
   deleteProperty: (id: string) => void;
-
-  // Guide ops
-  addGuide: (g: WelcomeGuide) => void;
-  updateGuide: (g: WelcomeGuide) => void;
-  deleteGuide: (id: string) => void;
 
   // Task ops
   addTask: (t: Task) => void;
@@ -54,10 +54,17 @@ interface AppContextType {
   updateAdminRecord: (r: AdminControlRecord) => void;
   deleteAdminRecord: (id: string) => void;
 
+  // Stay ops
+  stays: Stay[];
+  addStay: (s: Stay) => void;
+  updateStay: (s: Stay) => void;
+  deleteStay: (id: string) => void;
+
   // User ops
   addUser: (u: AppUser) => void;
   updateUser: (u: AppUser) => void;
   toggleUserStatus: (id: string) => void;
+  updateUserPassword: (userId: string, newHash: string) => void;
 
   // Delete modal
   deleteModalOpen: boolean;
@@ -71,10 +78,35 @@ interface AppContextType {
   openEditModal: (preselect?: EditPreselect) => void;
   closeEditModal: () => void;
 
+  // Inventory
+  inventoryCategories: InventoryCategory[];
+  inventoryItems: InventoryItem[];
+  addInventoryCategory: (c: InventoryCategory) => void;
+  addInventoryItem: (i: InventoryItem) => void;
+  updateInventoryItem: (i: InventoryItem) => void;
+  deleteInventoryItem: (id: string) => void;
+
+  // Guides
+  guides: WelcomeGuide[];
+  addGuide: (g: WelcomeGuide) => void;
+  updateGuide: (g: WelcomeGuide) => void;
+  deleteGuide: (id: string) => void;
+
   // Toast
   toast: string | null;
   showToast: (message: string) => void;
+
+  // Reviews
+  reviewsState: ReviewsState;
+  airbnbSession: AirbnbSession | null;
+  saveAirbnbSession: (token: string) => void;
+  clearAirbnbSession: () => void;
+  fetchAllReviews: () => Promise<void>;
 }
+
+// ── localStorage version guard — never wipes data automatically ───────────────
+// To force-reset a specific key, delete it from localStorage manually in DevTools.
+// Do NOT bump a version number here to avoid wiping real user data.
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
 function load<T>(key: string, fallback: T): T {
@@ -87,18 +119,23 @@ function load<T>(key: string, fallback: T): T {
 }
 
 const KEYS = {
-  properties:   'airbnb_properties',
-  tasks:        'airbnb_tasks',
-  expenses:     'airbnb_expenses',
-  adminRecords: 'airbnb_adminRecords',
-  users:        'airbnb_users',
-  guides:       'airbnb_guides',
+  properties:      'airbnb_properties',
+  tasks:           'airbnb_tasks',
+  expenses:        'airbnb_expenses',
+  adminRecords:    'airbnb_adminRecords',
+  users:           'airbnb_users',
+  stays:           'airbnb_stays',
+  propertyConfigs: 'airbnb_propertyConfigs',
+  invCategories:   'airbnb_invCategories',
+  invItems:        'airbnb_invItems',
+  guides:          'airbnb_guides',
 };
+
+const AppContext = createContext<AppContextType | null>(null);
 
 const defaultGuides: WelcomeGuide[] = [
   {
     id: 'guide_5',
-    propertyId: '5',
     name: 'Casa de la Puerta Azul',
     type: 'casa',
     bedrooms: 4,
@@ -116,19 +153,8 @@ const defaultGuides: WelcomeGuide[] = [
     hostPhone: '442 185 1478',
     hostEmail: 'luis@example.com',
     welcomeMessage: 'Ubicación, Privacidad y Comodidad. A un costado del Estadio Corregidora con acceso a la Carretera 57 Mex-Qro y al Libramiento Fray Junípero Serra. Lugar tranquilo, seguro y cómodo, ideal tanto para trabajo como para descanso. Puedes llegar en tu auto o en camión – la casa se encuentra a tan solo 3 minutos de la terminal de autobuses TAQ.',
-    inclusions: [
-      'Cocina completa (refrigerador, horno, estufa)',
-      'Detector de monóxido de carbono',
-      'Estacionamiento gratuito en cochera (1 lugar)',
-      'Televisión HD con Netflix',
-      'WiFi de alta velocidad',
-      'Área de trabajo con escritorio y enchufe'
-    ],
-    photos: [
-      '/images/casa-puerta-azul/window-grapes.jpg',
-      '/images/casa-puerta-azul/gate-door.jpg',
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'
-    ],
+    inclusions: ['Cocina completa (refrigerador, horno, estufa)', 'Detector de monóxido de carbono', 'Estacionamiento gratuito en cochera (1 lugar)', 'Televisión HD con Netflix', 'WiFi de alta velocidad', 'Área de trabajo con escritorio y enchufe'],
+    photos: ['/images/casa-puerta-azul/window-grapes.jpg', '/images/casa-puerta-azul/gate-door.jpg', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
     checkInTime: '3:00 p.m.',
     checkInNote: 'Hasta las 11:00 p.m.',
     checkOutTime: '12:00 p.m.',
@@ -144,42 +170,20 @@ const defaultGuides: WelcomeGuide[] = [
     trashInstructions: 'La basura la puedes depositar en los contenedores ubicados en el patio trasero de la casa. El camión recolector pasa de manera regular por la zona.',
     tvInstructions: 'La TV inteligente está configurada con las principales aplicaciones de streaming (Netflix, Disney+, Prime Video). Recuerda que deberás ingresar con tus cuentas personales y cerrarlas antes de tu salida.',
     additionalInstructions: 'Mantén las luces y los aparatos eléctricos apagados cuando te encuentres fuera del alojamiento. No dejes basura acumulada en el interior de la casa, colócala en el patio trasero antes de salir.',
-    amenities: [
-      'Cocina completa',
-      'Detector de monóxido de carbono',
-      'Estacionamiento (1 auto)',
-      'Smart TV HD',
-      'WiFi de alta velocidad',
-      'Área de trabajo'
-    ],
+    amenities: ['Cocina completa', 'Detector de monóxido de carbono', 'Estacionamiento (1 auto)', 'Smart TV HD', 'WiFi de alta velocidad', 'Área de trabajo'],
     petsAllowed: true,
     eventsAllowed: false,
     smokingAllowed: false,
-    additionalRules: [
-      'Mantén las luces y los aparatos eléctricos apagados cuando te encuentres fuera del alojamiento.',
-      'No dejes basura acumulada en el interior de la casa, colócala en el patio trasero antes de salir.',
-      'Al salir de la propiedad, no es necesario colocar cerraduras manuales extras adicionales; la cerradura digital inteligente se bloquea de manera autónoma.',
-      'Asegúrate de mantener cerrados con llave los candados de los accesos exteriores.',
-      'Recuerda volver la perilla del calentador (boiler) a la posición "Piloto" antes de tu salida.'
-    ],
+    additionalRules: ['Mantén las luces y los aparatos eléctricos apagados cuando te encuentres fuera del alojamiento.', 'No dejes basura acumulada en el interior de la casa, colócala en el patio trasero antes de salir.', 'Al salir de la propiedad, no es necesario colocar cerraduras manuales extras adicionales; la cerradura digital inteligente se bloquea de manera autónoma.'],
     carbonMonoxideDetector: true,
     smokeDetector: false,
     securityCameras: true,
-    checkoutSteps: [
-      'Apaga todas las luces de la casa.',
-      'Apaga todos los aparatos eléctricos (TV, ventiladores, aire acondicionado, etc.).',
-      'Regresa la perilla del boiler a la posición de "Piloto".',
-      'Deja la basura en el patio trasero en bolsas cerradas.',
-      'Asegúrate de que los candados exteriores queden cerrados correctamente.',
-      'Cierra la puerta principal (no requiere seguro adicional).',
-      'Comunica tu salida enviando un mensaje al anfitrión.'
-    ],
-    createdAt: '2026-06-24T00:00:00Z',
-    updatedAt: '2026-06-24T00:00:00Z'
+    checkoutSteps: ['Apaga todas las luces de la casa.', 'Apaga todos los aparatos eléctricos (TV, ventiladores, aire acondicionado, etc.).', 'Regresa la perilla del boiler a la posición de "Piloto".', 'Deja la basura en el patio trasero en bolsas cerradas.', 'Asegúrate de que los candados exteriores queden cerrados correctamente.'],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'guide_6',
-    propertyId: '6',
     name: 'Casa 2Hab con A/C | cerca Pirámide',
     type: 'casa',
     bedrooms: 2,
@@ -197,20 +201,8 @@ const defaultGuides: WelcomeGuide[] = [
     hostPhone: '4421851478',
     hostEmail: 'ricardo@example.com',
     welcomeMessage: 'Casa tranquila y equipada para trabajar o descansar. Espacio cómodo y silencioso ideal para trabajo remoto, parejas o familias pequeñas. Ubicada en Paseos del Bosque, a minutos de la Pirámide del Pueblito y 18 min del Centro. Lugar práctico, limpio y con buena energía.',
-    inclusions: [
-      '2 recámaras con cama matrimonial',
-      'Aire acondicionado',
-      'Smart TV 55" QLED',
-      'Cocina completamente equipada',
-      'Agua caliente',
-      'UPS para internet y laptop',
-      'Estacionamiento para 2 autos'
-    ],
-    photos: [
-      '/images/casa-mora/photo1.jpg',
-      '/images/casa-mora/photo2.jpg',
-      '/images/casa-mora/photo3.jpg'
-    ],
+    inclusions: ['2 recámaras con cama matrimonial', 'Aire acondicionado', 'Smart TV 55" QLED', 'Cocina completamente equipada', 'Agua caliente', 'UPS para internet y laptop', 'Estacionamiento para 2 autos'],
+    photos: ['/images/casa-mora/photo1.jpg', '/images/casa-mora/photo2.jpg', '/images/casa-mora/photo3.jpg'],
     checkInTime: '3:00 p.m.',
     checkInNote: 'hasta las 11:00 p.m.',
     checkOutTime: '12:00 p.m.',
@@ -224,36 +216,19 @@ const defaultGuides: WelcomeGuide[] = [
     trashInstructions: 'La basura la puedes dejar en los contenedores que se encuentran en el cuarto que se encuentra al lado de la puerta de acceso al condominio.',
     tvInstructions: 'Smart TV 55" QLED en la sala de estar.',
     additionalInstructions: 'Los focos del comedor, sala, y habitaciones tienen un control remoto para cambiar de intensidad y de color de luz Fría y Cálida. para que tu elijas el ambiente de esos espacios. El aire acondicionado funciona por horarios, solo se encuentra en el área del comedor y sala.',
-    amenities: [
-      '2 recámaras matrimoniales',
-      'Aire acondicionado',
-      'Smart TV 55" QLED',
-      'Cocina equipada',
-      'Calentador eléctrico',
-      'UPS para módem',
-      'Estacionamiento (2 autos)'
-    ],
+    amenities: ['2 recámaras matrimoniales', 'Aire acondicionado', 'Smart TV 55" QLED', 'Cocina equipada', 'Calentador eléctrico', 'UPS para internet', 'Estacionamiento (2 autos)'],
     petsAllowed: false,
     eventsAllowed: false,
     smokingAllowed: false,
-    additionalRules: [
-      'Debido a que la casa es para hospedaje y descanso, no se permiten las fiestas en la propiedad',
-      'Asegurarse de dejar todo apagado la fecha de salida'
-    ],
+    additionalRules: ['Debido a que la casa es para hospedaje y descanso, no se permiten las fiestas en la propiedad', 'Asegurarse de dejar todo apagado la fecha de salida'],
     carbonMonoxideDetector: true,
     smokeDetector: false,
     securityCameras: true,
-    checkoutSteps: [
-      'Dejar el llaver de acceso al condominio en la mesa',
-      'Asegurarse de dejar todo apagado',
-      'Solicitar la apertura del Portón.'
-    ],
-    createdAt: '2026-06-24T00:00:00Z',
-    updatedAt: '2026-06-24T00:00:00Z'
-  }
+    checkoutSteps: ['Dejar el llaver de acceso al condominio en la mesa', 'Asegurarse de dejar todo apagado', 'Solicitar la apertura del Portón.'],
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  },
 ];
-
-const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [properties, setProperties]       = useState<Property[]>          (() => load(KEYS.properties,   mockProperties));
@@ -261,7 +236,50 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [expenses, setExpenses]           = useState<Expense[]>           (() => load(KEYS.expenses,      mockExpenses));
   const [adminRecords, setAdminRecords]   = useState<AdminControlRecord[]>(() => load(KEYS.adminRecords,  mockAdminControl));
   const [users, setUsers]                 = useState<AppUser[]>           (() => load(KEYS.users,         mockUsers));
-  const [guides, setGuides]               = useState<WelcomeGuide[]>      (() => load(KEYS.guides,        defaultGuides));
+  const [stays, setStays]                 = useState<Stay[]>              (() => load(KEYS.stays,         []));
+  const [propertyConfigs, setPropertyConfigs] = useState<PropertyConfig[]>(() => load(KEYS.propertyConfigs, []));
+  const [invCategories, setInvCategories]   = useState<InventoryCategory[]>(() => load(KEYS.invCategories, mockInventoryCategories));
+  const [invItems, setInvItems]             = useState<InventoryItem[]>    (() => load(KEYS.invItems, mockInventoryItems));
+  const [guides, setGuides]                 = useState<WelcomeGuide[]>     (() => load(KEYS.guides, defaultGuides));
+
+  // ── Reviews state ─────────────────────────────────────────────────────────────
+  const [reviewsState, setReviewsState] = useState<ReviewsState>(() => {
+    const cached = loadReviewsCache();
+    return {
+      reviews: cached?.reviews ?? [],
+      lastFetchedAt: cached?.fetchedAt ?? null,
+      isLoading: false,
+      error: null,
+    };
+  });
+  const [airbnbSession, setAirbnbSession] = useState<AirbnbSession | null>(() => loadSession());
+
+  const saveAirbnbSession = (token: string) => {
+    const session = saveSession(token);
+    setAirbnbSession(session);
+  };
+
+  const clearAirbnbSession = () => {
+    clearSession();
+    setAirbnbSession(null);
+  };
+
+  const fetchAllReviews = async () => {
+    setReviewsState(prev => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const allReviews = await fetchReviewsByUrls([...LISTING_URLS]);
+      saveReviewsCache(allReviews);
+      setReviewsState({
+        reviews: allReviews,
+        lastFetchedAt: new Date().toISOString(),
+        isLoading: false,
+        error: null,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al obtener reseñas';
+      setReviewsState(prev => ({ ...prev, isLoading: false, error: message }));
+    }
+  };
 
   // Persist every state to localStorage on change
   useEffect(() => { localStorage.setItem(KEYS.properties,   JSON.stringify(properties));   }, [properties]);
@@ -269,7 +287,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { localStorage.setItem(KEYS.expenses,     JSON.stringify(expenses));     }, [expenses]);
   useEffect(() => { localStorage.setItem(KEYS.adminRecords, JSON.stringify(adminRecords)); }, [adminRecords]);
   useEffect(() => { localStorage.setItem(KEYS.users,        JSON.stringify(users));        }, [users]);
-  useEffect(() => { localStorage.setItem(KEYS.guides,       JSON.stringify(guides));       }, [guides]);
+  useEffect(() => { localStorage.setItem(KEYS.stays,        JSON.stringify(stays));        }, [stays]);
+  useEffect(() => { localStorage.setItem(KEYS.propertyConfigs, JSON.stringify(propertyConfigs)); }, [propertyConfigs]);
+  useEffect(() => { localStorage.setItem(KEYS.invCategories,   JSON.stringify(invCategories));   }, [invCategories]);
+  useEffect(() => { localStorage.setItem(KEYS.invItems,        JSON.stringify(invItems));         }, [invItems]);
+  useEffect(() => { localStorage.setItem(KEYS.guides,          JSON.stringify(guides));           }, [guides]);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen]           = useState(false);
@@ -286,11 +308,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addProperty    = (p: Property) => setProperties(prev => [...prev, p]);
   const updateProperty = (p: Property) => setProperties(prev => prev.map(x => x.id === p.id ? p : x));
   const deleteProperty = (id: string)  => setProperties(prev => prev.filter(p => p.id !== id));
-
-  // ── Guide ─────────────────────────────────────────────────────────────────
-  const addGuide    = (g: WelcomeGuide) => setGuides(prev => [...prev, g]);
-  const updateGuide = (g: WelcomeGuide) => setGuides(prev => prev.map(x => x.id === g.id ? g : x));
-  const deleteGuide = (id: string)  => setGuides(prev => prev.filter(g => g.id !== id));
 
   // ── Task ─────────────────────────────────────────────────────────────────
   const addTask    = (t: Task) => setTasks(prev => [t, ...prev]);
@@ -328,11 +345,63 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const deleteAdminRecord = (id: string) =>
     setAdminRecords(prev => prev.filter(r => r.id !== id));
 
+  // ── PropertyConfig ────────────────────────────────────────────────────────
+  const upsertPropertyConfig = (c: PropertyConfig) =>
+    setPropertyConfigs(prev => {
+      const exists = prev.some(x => x.propertyId === c.propertyId);
+      return exists ? prev.map(x => x.propertyId === c.propertyId ? c : x) : [...prev, c];
+    });
+
+  // ── Inventory ─────────────────────────────────────────────────────────────
+  const addInventoryCategory = (c: InventoryCategory) => setInvCategories(prev => [...prev, c]);
+  const addInventoryItem     = (i: InventoryItem) => setInvItems(prev => [i, ...prev]);
+  const updateInventoryItem  = (i: InventoryItem) => setInvItems(prev => prev.map(x => x.id === i.id ? i : x));
+  const deleteInventoryItem  = (id: string)       => setInvItems(prev => prev.filter(x => x.id !== id));
+
+  // ── Guides ────────────────────────────────────────────────────────────────
+  const addGuide    = (g: WelcomeGuide) => setGuides(prev => [g, ...prev]);
+  const updateGuide = (g: WelcomeGuide) => setGuides(prev => prev.map(x => x.id === g.id ? g : x));
+  const deleteGuide = (id: string)      => setGuides(prev => prev.filter(x => x.id !== id));
+
+  // ── Stay ─────────────────────────────────────────────────────────────────
+  const addStay    = (s: Stay) => setStays(prev => [...prev, s]);
+  const updateStay = (s: Stay) => setStays(prev => prev.map(x => x.id === s.id ? s : x));
+  const deleteStay = (id: string) => setStays(prev => prev.filter(s => s.id !== id));
+
+  // ── Seed initialization — hash default passwords on first run ────────────
+  useEffect(() => {
+    const stored = localStorage.getItem(KEYS.users);
+    const parsed: AppUser[] = stored ? JSON.parse(stored) : [];
+    if (parsed.length > 0) return; // already seeded
+
+    Promise.all(
+      SEED_USERS.map(async (su) => {
+        const passwordHash = await hashPassword(su.password, su.id);
+        const user: AppUser = {
+          id: su.id,
+          name: su.name,
+          email: su.email,
+          phone: su.phone,
+          role: su.role,
+          propertyAccess: su.propertyAccess,
+          status: su.status,
+          createdAt: su.createdAt,
+          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(su.name)}&background=FF5A5F&color=fff`,
+          passwordHash,
+        };
+        return user;
+      })
+    ).then(seeded => setUsers(seeded));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ── User ──────────────────────────────────────────────────────────────────
   const addUser          = (u: AppUser) => setUsers(prev => [...prev, u]);
   const updateUser       = (u: AppUser) => setUsers(prev => prev.map(x => x.id === u.id ? u : x));
   const toggleUserStatus = (id: string) =>
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u));
+  const updateUserPassword = (userId: string, newHash: string) =>
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, passwordHash: newHash } : u));
 
   // ── Delete modal ──────────────────────────────────────────────────────────
   const openDeleteModal = (preselect?: Omit<DeletePreselect, 'fromInline'>) => {
@@ -362,16 +431,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AppContext.Provider value={{
-      properties, tasks, expenses, adminRecords, users, guides,
+      properties, tasks, expenses, adminRecords, users, stays, propertyConfigs, upsertPropertyConfig,
       addProperty, updateProperty, deleteProperty,
-      addGuide, updateGuide, deleteGuide,
       addTask, updateTask, moveTask, deleteTask,
       addExpense, updateExpense, deleteExpense,
       updateAdminRecord, deleteAdminRecord,
-      addUser, updateUser, toggleUserStatus,
+      addStay, updateStay, deleteStay,
+      inventoryCategories: invCategories, inventoryItems: invItems,
+      addInventoryCategory, addInventoryItem, updateInventoryItem, deleteInventoryItem,
+      guides, addGuide, updateGuide, deleteGuide,
+      addUser, updateUser, toggleUserStatus, updateUserPassword,
       deleteModalOpen, deleteModalPreselect, openDeleteModal, closeDeleteModal,
       editModalOpen, editModalPreselect, openEditModal, closeEditModal,
       toast, showToast,
+      reviewsState, airbnbSession, saveAirbnbSession, clearAirbnbSession, fetchAllReviews,
     }}>
       {children}
     </AppContext.Provider>

@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, BarChart2 } from 'lucide-react';
 import { mockProperties, mockIncomes, mockExpenses, mockTasks } from '../data/mockData';
 import FinancialControl from '../components/FinancialControl';
+import { usePagination } from '../hooks/usePagination';
+import PaginationBar from '../components/PaginationBar';
 
 const Reports = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(1);
   const [selectedProperty, setSelectedProperty] = useState('all');
-  
+
   // Simulated logged-in user role (toggle to test)
   const [simulatedRole, setSimulatedRole] = useState<'admin'|'host'>('admin');
   const [hostPropertyId] = useState('1'); // Simulated property ID for host
@@ -39,6 +43,7 @@ const Reports = () => {
 
   // Reporte 3: Tareas Pendientes
   const pendingTasks = mockTasks.filter(t => t.status !== 'Completado');
+  const taskPag  = usePagination(pendingTasks, 'reports_tasks');
   const rep3Data = mockProperties.map(p => ({
     name: p.name,
     pendientes: pendingTasks.filter(t => t.propertyId === p.id).length
@@ -72,8 +77,15 @@ const Reports = () => {
     <div>
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <h2 className="page-title">Centro de Reportes</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {exportButtons}
+          <button
+            className="btn-primary"
+            onClick={() => navigate('/reportes/constructor')}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <BarChart2 size={16} /> Construir Reporte
+          </button>
           <button className="btn-outline" onClick={() => setSimulatedRole('host')} style={{fontSize: '12px', marginLeft: '12px'}}>Ver como Anfitrión</button>
         </div>
       </div>
@@ -172,7 +184,7 @@ const Reports = () => {
                 <tr style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}><th style={{padding:'12px'}}>Propiedad</th><th style={{padding:'12px'}}>Tarea</th><th style={{padding:'12px'}}>Responsable</th><th style={{padding:'12px'}}>Fecha</th></tr>
               </thead>
               <tbody>
-                {pendingTasks.map(t => (
+                {taskPag.paginated.map(t => (
                   <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{padding:'12px'}}>{mockProperties.find(p => p.id === t.propertyId)?.name}</td>
                     <td style={{padding:'12px'}}>{t.title}</td>
@@ -182,6 +194,7 @@ const Reports = () => {
                 ))}
               </tbody>
             </table>
+            <PaginationBar {...taskPag} />
           </div>
         )}
 

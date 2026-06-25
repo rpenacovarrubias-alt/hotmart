@@ -86,7 +86,7 @@ const GuideBuilder = () => {
     '¡Guía pre-estructurada con éxito!',
   ];
 
-  const handleExtract = () => {
+  const handleExtract = async () => {
     if (!airbnbUrl.trim()) {
       toast.error('Por favor ingresa una URL de Airbnb válida');
       return;
@@ -95,171 +95,108 @@ const GuideBuilder = () => {
     setIsExtracting(true);
     setExtractionStep(0);
 
-    // Animación de extracción en pasos
-    const interval = setInterval(() => {
-      setExtractionStep(prev => {
-        if (prev >= extractionMessages.length - 1) {
-          clearInterval(interval);
-          setTimeout(() => {
-            // Completado: poblar con mock data basado en la URL
-            let extractedData: Partial<WelcomeGuide> = {};
+    // Progress animation while real API call runs in parallel
+    const stepInterval = setInterval(() => {
+      setExtractionStep(prev =>
+        prev < extractionMessages.length - 2 ? prev + 1 : prev
+      );
+    }, 3000);
 
-            const isPiramide = airbnbUrl.includes('1667036785999383762') || airbnbUrl.toLowerCase().includes('piramide') || airbnbUrl.toLowerCase().includes('mora');
-            const isPuertaAzul = airbnbUrl.toLowerCase().includes('puerta-azul') || airbnbUrl.toLowerCase().includes('azul');
-
-            if (isPiramide) {
-              extractedData = {
-                name: 'Casa 2Hab con A/C | cerca Pirámide',
-                type: 'casa',
-                bedrooms: 2,
-                beds: 2,
-                bathrooms: 1,
-                maxGuests: 2,
-                location: 'Paseos del Bosque, Corregidora, Querétaro, México',
-                address: 'Paseos del Bosque, Corregidora, Querétaro, México',
-                airbnbUrl: 'www.airbnb.mx/rooms/1667036785999383762',
-                airbnbId: '1667036785999383762',
-                imageUrl: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80',
-                wifiNetwork: 'Kuni',
-                wifiPassword: 'Relax@33h.k',
-                hostName: 'Co-Anfitrión Ricardo Peña C.',
-                hostPhone: '4421851478',
-                hostEmail: 'ricardo@example.com',
-                welcomeMessage: 'Casa tranquila y equipada para trabajar o descansar. Espacio cómodo y silencioso ideal para trabajo remoto, parejas o familias pequeñas. Ubicada en Paseos del Bosque, a minutos de la Pirámide del Pueblito y 18 min del Centro. Lugar práctico, limpio y con buena energía.',
-                inclusions: ['2 recámaras con cama matrimonial', 'Aire acondicionado', 'Smart TV 55" QLED', 'Cocina completamente equipada', 'Agua caliente', 'UPS para internet y laptop', 'Estacionamiento para 2 autos'],
-                photos: ['/images/casa-mora/photo1.jpg', '/images/casa-mora/photo2.jpg', '/images/casa-mora/photo3.jpg'],
-                checkInTime: '3:00 p.m.',
-                checkInNote: 'hasta las 11:00 p.m.',
-                checkOutTime: '12:00 p.m.',
-                checkOutNote: 'Maximo',
-                accessInstructions: 'A tu llegada por favor, notifica en la app de AIRBNB por mensaje y te abriremos enseguida el acceso vial. y para entrar a la propiedad. ya te habremos enviado tu código de apertura, con el que podrás tener acceso a la casa. Dentro de la casa encontrarás un llavero de control remoto para el acceso al condominio, con el podrás salir y entrar cuando lo requieras.',
-                googleMapsUrl: 'https://maps.app.goo.gl/2sSTjeTdve22uyNXA',
-                boilerInstructions: [
-                  'El Boiler es eléctrico y está conectado y prendido, puedes asegurarte que se encuentra encendido por la pantalla led con el indicador de la temperatura.',
-                  'si no lo está tiene el botón de encendido debajo de la pantalla.'
-                ],
-                trashInstructions: 'La basura la puedes dejar en los contenedores que se encuentran en el cuarto que se encuentra al lado de la puerta de acceso al condominio.',
-                tvInstructions: 'Smart TV 55" QLED en la sala de estar.',
-                additionalInstructions: 'Los focos del comedor, sala, y habitaciones tienen un control remoto para cambiar de intensidad y de color de luz Fría y Cálida. para que tu elijas el ambiente de esos espacios. El aire acondicionado funciona por horarios, solo se encuentra en el área del comedor y sala.',
-                amenities: ['2 recámaras matrimoniales', 'Aire acondicionado', 'Smart TV 55" QLED', 'Cocina equipada', 'Calentador eléctrico', 'UPS para internet', 'Estacionamiento (2 autos)'],
-                petsAllowed: false,
-                eventsAllowed: false,
-                smokingAllowed: false,
-                additionalRules: ['Debido a que la casa es para hospedaje y descanso, no se permiten las fiestas en la propiedad', 'Asegurarse de dejar todo apagado la fecha de salida'],
-                carbonMonoxideDetector: true,
-                smokeDetector: false,
-                securityCameras: true,
-                checkoutSteps: ['Dejar el llaver de acceso al condominio en la mesa', 'Asegurarse de dejar todo apagado', 'Solicitar la apertura del Portón.'],
-              };
-            } else if (isPuertaAzul) {
-              extractedData = {
-                name: 'Casa de la Puerta Azul',
-                type: 'casa',
-                bedrooms: 4,
-                beds: 4,
-                bathrooms: 3,
-                maxGuests: 8,
-                location: 'Centro, Qro',
-                address: 'Fray Francisco de Los Angeles 240, Quintas del Marques, 76047 Santiago de Querétaro, Qro.',
-                airbnbUrl: 'airbnb.mx/h/casalapuertaazul',
-                airbnbId: '56789012',
-                imageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
-                wifiNetwork: 'INFINITUM56B6',
-                wifiPassword: 'utHK9UGGTu',
-                hostName: 'Ricardo (Co-anfitrión)',
-                hostPhone: '442 185 1478',
-                hostEmail: 'luis@example.com',
-                welcomeMessage: 'Ubicación, Privacidad y Comodidad. A un costado del Estadio Corregidora con acceso a la Carretera 57 Mex-Qro y al Libramiento Fray Junípero Serra. Lugar tranquilo, seguro y cómodo, ideal tanto para trabajo como para descanso. Puedes llegar en tu auto o en camión – la casa se encuentra a tan solo 3 minutos de la terminal de autobuses TAQ.',
-                inclusions: ['Cocina completa (refrigerador, horno, estufa)', 'Detector de monóxido de carbono', 'Estacionamiento gratuito en cochera (1 lugar)', 'Televisión HD con Netflix', 'WiFi de alta velocidad', 'Área de trabajo con escritorio y enchufe'],
-                photos: ['/images/casa-puerta-azul/window-grapes.jpg', '/images/casa-puerta-azul/gate-door.jpg', 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
-                checkInTime: '3:00 p.m.',
-                checkInNote: 'Hasta las 11:00 p.m.',
-                checkOutTime: '12:00 p.m.',
-                checkOutNote: 'Máximo',
-                accessInstructions: 'Acceso autónomo mediante teclado digital (Keypad) en la puerta de entrada.',
-                googleMapsUrl: 'https://maps.google.com/?q=Fray+Francisco+de+Los+Angeles+240,+Santiago+de+Querétaro',
-                boilerInstructions: [
-                  'El boiler tiene el piloto encendido de manera permanente.',
-                  'Gira la perilla a la posición de "Encendido" cuando vayas a bañarte.',
-                  'Espera entre 10 y 15 minutos para que el agua se caliente por completo.',
-                  'Al salir de la propiedad, regresa siempre la perilla del boiler a la posición de "Piloto" para ahorrar gas y por seguridad.'
-                ],
-                trashInstructions: 'La basura la puedes depositar en los contenedores ubicados en el patio trasero de la casa. El camión recolector pasa de manera regular por la zona.',
-                tvInstructions: 'La TV inteligente está configurada con las principales aplicaciones de streaming (Netflix, Disney+, Prime Video). Recuerda que deberás ingresar con tus cuentas personales y cerrarlas antes de tu salida.',
-                additionalInstructions: 'Mantén las luces y los aparatos eléctricos apagados cuando te encuentres fuera del alojamiento. No dejes basura acumulada en el interior de la casa, colócala en el patio trasero antes de salir.',
-                amenities: ['Cocina completa', 'Detector de monóxido de carbono', 'Estacionamiento (1 auto)', 'Smart TV HD', 'WiFi de alta velocidad', 'Área de trabajo'],
-                petsAllowed: true,
-                eventsAllowed: false,
-                smokingAllowed: false,
-                additionalRules: ['Mantén las luces y los aparatos eléctricos apagados cuando te encuentres fuera del alojamiento.', 'No dejes basura acumulada en el interior de la casa, colócala en el patio trasero antes de salir.', 'Al salir de la propiedad, no es necesario colocar cerraduras manuales extras adicionales; la cerradura digital inteligente se bloquea de manera autónoma.'],
-                carbonMonoxideDetector: true,
-                smokeDetector: false,
-                securityCameras: true,
-                checkoutSteps: ['Apaga todas las luces de la casa.', 'Apaga todos los aparatos eléctricos (TV, ventiladores, aire acondicionado, etc.).', 'Regresa la perilla del boiler a la posición de "Piloto".', 'Deja la basura en el patio trasero en bolsas cerradas.', 'Asegúrate de que los candados exteriores queden cerrados correctamente.'],
-              };
-            } else {
-              // Genérico basado en URL
-              const match = airbnbUrl.match(/rooms\/([0-9]+)/);
-              const airbnbId = match ? match[1] : `gen_${Date.now()}`;
-              extractedData = {
-                name: 'Mi Nueva Propiedad Airbnb',
-                type: 'casa',
-                bedrooms: 3,
-                beds: 3,
-                bathrooms: 2,
-                maxGuests: 6,
-                location: 'Querétaro, Qro., México',
-                address: 'Calle Ficticia #123, Colonia Hermosa, Querétaro',
-                airbnbUrl: airbnbUrl.replace('https://', '').replace('http://', ''),
-                airbnbId: airbnbId,
-                imageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
-                wifiNetwork: 'Red_Propiedad_WiFi',
-                wifiPassword: 'Password123',
-                hostName: 'Coanfitriones México Support',
-                hostPhone: '4421851478',
-                welcomeMessage: '¡Bienvenido a nuestro alojamiento! Hemos preparado esta guía interactiva para facilitar tu estadía y asegurar que te sientas como en casa.',
-                inclusions: ['Cocina equipada', 'Agua caliente', 'WiFi de alta velocidad', 'Televisión Smart', 'Estacionamiento'],
-                photos: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80'],
-                checkInTime: '3:00 p.m.',
-                checkInNote: 'Hasta las 11:00 p.m.',
-                checkOutTime: '12:00 p.m.',
-                checkOutNote: 'Máximo',
-                accessInstructions: 'Acceso autónomo mediante caja de llaves de seguridad en el exterior con código digital.',
-                googleMapsUrl: 'https://maps.google.com',
-                boilerInstructions: ['El calentador de agua está encendido de manera automática.', 'No es necesario realizar ajustes adicionales.'],
-                trashInstructions: 'Puedes depositar la basura en el depósito exterior principal de la privada.',
-                tvInstructions: 'La televisión inteligente cuenta con conexión WiFi para que uses tus aplicaciones favoritas.',
-                amenities: ['Acceso autónomo', 'WiFi', 'Cocina', 'Área de trabajo', 'Estacionamiento'],
-                petsAllowed: false,
-                eventsAllowed: false,
-                smokingAllowed: false,
-                additionalRules: ['Mantener el orden y el silencio a partir de las 10:00 p.m.', 'Apagar luces al salir.'],
-                carbonMonoxideDetector: true,
-                smokeDetector: true,
-                securityCameras: false,
-                checkoutSteps: ['Apagar luces y aire acondicionado.', 'Dejar las llaves en la caja de seguridad exterior.', 'Cerrar la puerta.', 'Avisar al anfitrión.'],
-              };
-            }
-
-            setForm(prev => ({ ...prev, ...extractedData }));
-            setIsExtracting(false);
-            setShowEditor(true);
-            toast.success('¡Extracción completada! Ya puedes personalizar los detalles.');
-          }, 800);
-          return prev;
-        }
-        return prev + 1;
+    try {
+      const response = await fetch('/api/import-airbnb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: airbnbUrl.trim() }),
       });
-    }, 1200);
+
+      clearInterval(stepInterval);
+      setExtractionStep(extractionMessages.length - 1);
+
+      if (!response.ok) {
+        const { error } = await response.json() as { error: string };
+        throw new Error(error ?? `Error ${response.status}`);
+      }
+
+      const { guide } = await response.json() as { guide: Record<string, unknown> };
+
+      // Extract listing ID from URL for airbnbId
+      const idMatch = airbnbUrl.match(/\/(\d{10,})/);
+      const detectedId = idMatch ? idMatch[1] : `imported_${Date.now()}`;
+
+      // Map API response (PropertyGuide-style fields) → WelcomeGuide fields
+      const str  = (v: unknown, fallback = '') => (typeof v === 'string' && v ? v : fallback);
+      const num  = (v: unknown, fallback = 0) => (typeof v === 'number' ? v : fallback);
+      const bool = (v: unknown) => v === true;
+      const arr  = (v: unknown): string[] =>
+        Array.isArray(v) ? (v as unknown[]).filter(x => typeof x === 'string') as string[] : [];
+      const strArr = (v: unknown): string[] => {
+        if (Array.isArray(v)) return arr(v);
+        if (typeof v === 'string' && v.trim()) return [v.trim()];
+        return [];
+      };
+
+      const accessParts = [str(guide.checkinMethod), str(guide.directions)].filter(Boolean);
+
+      const extractedPhotos = arr(guide.photos).filter(u => u.startsWith('http'));
+      const extractedCover  = str(guide.coverPhoto) || extractedPhotos[0] || '';
+
+      const extractedData: Partial<WelcomeGuide> = {
+        name:                   str(guide.propertyName, 'Mi Propiedad Airbnb'),
+        type:                   str(guide.propertyType, 'casa'),
+        airbnbUrl:              str(guide.airbnbCustomLink, airbnbUrl),
+        airbnbId:               detectedId,
+        address:                str(guide.address),
+        location:               str(guide.address),
+        welcomeMessage:         str(guide.description),
+        bedrooms:               num(guide.bedrooms, 1),
+        beds:                   num(guide.beds, 1),
+        bathrooms:              num(guide.bathrooms, 1),
+        maxGuests:              num(guide.maxGuests, 2),
+        checkInTime:            str(guide.checkinStart, '3:00 p.m.'),
+        checkInNote:            str(guide.checkinEnd),
+        checkOutTime:           str(guide.checkoutTime, '12:00 p.m.'),
+        accessInstructions:     accessParts.join('\n\n'),
+        googleMapsUrl:          str(guide.mapsUrl),
+        wifiNetwork:            str(guide.wifiNetwork),
+        wifiPassword:           str(guide.wifiPassword),
+        tvInstructions:         str(guide.tvNotes),
+        boilerInstructions:     strArr(guide.boilerNotes),
+        trashInstructions:      str(guide.garbageNotes),
+        additionalInstructions: str(guide.houseManualExtra),
+        amenities:              arr(guide.amenities),
+        inclusions:             arr(guide.amenities).slice(0, 7),
+        petsAllowed:            bool(guide.petsAllowed),
+        eventsAllowed:          bool(guide.eventsAllowed),
+        smokingAllowed:         bool(guide.smokingAllowed),
+        additionalRules:        strArr(guide.additionalRules),
+        carbonMonoxideDetector: bool(guide.coMonoxideDetector),
+        smokeDetector:          bool(guide.smokeAlarm),
+        securityCameras:        bool(guide.securityCamera),
+        checkoutSteps:          arr(guide.checkoutInstructions),
+        hostName:               str(guide.hostName),
+        hostPhone:              str(guide.hostPhone),
+        imageUrl:               extractedCover,
+        photos:                 extractedPhotos.slice(0, 5),
+      };
+
+      setTimeout(() => {
+        setForm(prev => ({ ...prev, ...extractedData }));
+        setIsExtracting(false);
+        setShowEditor(true);
+        toast.success('¡Datos extraídos con éxito! Revisa y personaliza los detalles.');
+      }, 600);
+
+    } catch (err) {
+      clearInterval(stepInterval);
+      setIsExtracting(false);
+      const msg = err instanceof Error ? err.message : 'Error desconocido';
+      toast.error(`Error al extraer datos: ${msg}`);
+    }
   };
 
   const handleSave = () => {
     if (!form.name.trim()) {
       toast.error('Por favor ingresa un nombre para la propiedad');
-      return;
-    }
-    if (!form.wifiNetwork.trim() || !form.wifiPassword.trim()) {
-      toast.error('Por favor ingresa el nombre y la contraseña del WiFi');
       return;
     }
 
@@ -488,13 +425,27 @@ const GuideBuilder = () => {
 
                 <div className="form-group">
                   <label className="form-label">Imagen de Portada</label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <input type="text" className="form-input" style={{ flex: 1 }} value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="URL de la imagen o selecciona un archivo..." />
-                    <div style={{ position: 'relative', overflow: 'hidden' }}>
-                      <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
-                      <input type="file" accept="image/*" onChange={e => handleImageUpload(e, false)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                  {form.imageUrl ? (
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <img src={form.imageUrl} alt="Portada" style={{ width: 140, height: 95, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block' }}>
+                          <button className="btn-outline" type="button" style={{ whiteSpace: 'nowrap', padding: '8px 14px', fontSize: 13 }}>Cambiar Imagen</button>
+                          <input type="file" accept="image/*" onChange={e => handleImageUpload(e, false)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                        </div>
+                        <input type="text" className="form-input" value={form.imageUrl.startsWith('data:') ? '' : form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="O pega una URL..." style={{ fontSize: 12 }} />
+                        <button type="button" onClick={() => setForm({ ...form, imageUrl: '' })} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, cursor: 'pointer', textAlign: 'left', padding: 0 }}>✕ Quitar imagen</button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <input type="text" className="form-input" style={{ flex: 1 }} value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://... o sube un archivo" />
+                      <div style={{ position: 'relative', overflow: 'hidden' }}>
+                        <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
+                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, false)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -502,31 +453,38 @@ const GuideBuilder = () => {
                   <textarea rows={4} className="form-input" style={{ resize: 'vertical' }} value={form.welcomeMessage} onChange={e => setForm({ ...form, welcomeMessage: e.target.value })} placeholder="Un mensaje cordial introductorio..." />
                 </div>
 
-                {/* Galería (3 fotos) */}
-                <h4 style={{ fontSize: '14px', fontWeight: 700, margin: '24px 0 12px' }}>Fotos de la Galería (3 Requeridas)</h4>
-                {[0, 1, 2].map(idx => (
-                  <div key={idx} className="form-group" style={{ marginBottom: '16px' }}>
-                    <label className="form-label" style={{ fontSize: '12px' }}>Foto {idx + 1}</label>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        style={{ flex: 1 }}
-                        value={form.photos[idx] || ''} 
-                        onChange={e => {
-                          const newPhotos = [...form.photos];
-                          newPhotos[idx] = e.target.value;
-                          setForm({ ...form, photos: newPhotos });
-                        }} 
-                        placeholder="URL de la imagen o selecciona un archivo..."
-                      />
-                      <div style={{ position: 'relative', overflow: 'hidden' }}>
-                        <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
-                        <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true, idx)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
-                      </div>
+                {/* Galería (hasta 5 fotos) */}
+                <h4 style={{ fontSize: '14px', fontWeight: 700, margin: '24px 0 12px' }}>Fotos de la Galería</h4>
+                {[0, 1, 2, 3, 4].map(idx => {
+                  const photoVal = form.photos[idx] || '';
+                  const hasPhoto = Boolean(photoVal);
+                  return (
+                    <div key={idx} className="form-group" style={{ marginBottom: '16px' }}>
+                      <label className="form-label" style={{ fontSize: '12px' }}>Foto {idx + 1}</label>
+                      {hasPhoto ? (
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <img src={photoVal} alt={`Foto ${idx + 1}`} style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border-color)', flexShrink: 0 }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                            <div style={{ position: 'relative', overflow: 'hidden', display: 'inline-block' }}>
+                              <button className="btn-outline" type="button" style={{ whiteSpace: 'nowrap', padding: '7px 12px', fontSize: 12 }}>Cambiar</button>
+                              <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true, idx)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                            </div>
+                            <input type="text" className="form-input" value={photoVal.startsWith('data:') ? '' : photoVal} onChange={e => { const p = [...form.photos]; p[idx] = e.target.value; setForm({ ...form, photos: p }); }} placeholder="O pega una URL..." style={{ fontSize: 12 }} />
+                            <button type="button" onClick={() => { const p = [...form.photos]; p[idx] = ''; setForm({ ...form, photos: p }); }} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 12, cursor: 'pointer', textAlign: 'left', padding: 0 }}>✕ Quitar foto</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <input type="text" className="form-input" style={{ flex: 1 }} value={photoVal} onChange={e => { const p = [...form.photos]; p[idx] = e.target.value; setForm({ ...form, photos: p }); }} placeholder="https://... o sube un archivo" />
+                          <div style={{ position: 'relative', overflow: 'hidden' }}>
+                            <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
+                            <input type="file" accept="image/*" onChange={e => handleImageUpload(e, true, idx)} style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

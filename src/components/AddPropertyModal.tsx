@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, ImageOff } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import type { Property } from '../types';
 
 interface Props {
@@ -26,6 +27,7 @@ const getInitials = (name: string) =>
   name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
 const AddPropertyModal = ({ onAdd, onClose }: Props) => {
+  const { users } = useApp();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [type, setType] = useState<Property['type']>('departamento');
@@ -33,6 +35,8 @@ const AddPropertyModal = ({ onAdd, onClose }: Props) => {
   const [imageUrl, setImageUrl] = useState('');
   const [imgError, setImgError] = useState(false);
   const [hostName, setHostName] = useState('');
+  const [hostPhone, setHostPhone] = useState('');
+  const [hostEmail, setHostEmail] = useState('');
   const [commissionRate, setCommissionRate] = useState('15');
   const [status, setStatus] = useState<Property['status']>('activo');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -66,8 +70,8 @@ const AddPropertyModal = ({ onAdd, onClose }: Props) => {
       gallery: [],
       role: 'cohost',
       hostName: hostName.trim(),
-      hostPhone: '',
-      hostEmail: '',
+      hostPhone: hostPhone.trim(),
+      hostEmail: hostEmail.trim(),
       cleaningFee: 0,
       commissionRate: commission,
       maintenanceFee: 0,
@@ -157,13 +161,38 @@ const AddPropertyModal = ({ onAdd, onClose }: Props) => {
 
           <div className="form-group">
             <label className="form-label">Propietario / Contacto</label>
-            <input
-              type="text"
+            <select
               className="form-input"
-              value={hostName}
-              onChange={e => setHostName(e.target.value)}
-              placeholder="Nombre del propietario"
-            />
+              value=""
+              onChange={e => {
+                const u = users.find(u => u.id === e.target.value);
+                if (u) {
+                  setHostName(u.name);
+                  setHostPhone(u.phone ?? '');
+                  setHostEmail(u.email);
+                }
+              }}
+            >
+              <option value="">— Seleccionar usuario registrado —</option>
+              {users.filter(u => u.status === 'active').map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.role === 'host' ? 'Anfitrión' : u.role === 'admin' ? 'Admin' : u.role === 'manager' ? 'Gerente' : u.role})
+                </option>
+              ))}
+            </select>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Al seleccionar se auto-rellenan los campos. Puedes editarlos después en la ficha.
+            </p>
+            {hostName && (
+              <input
+                type="text"
+                className="form-input"
+                value={hostName}
+                onChange={e => setHostName(e.target.value)}
+                placeholder="Nombre del propietario"
+                style={{ marginTop: '8px' }}
+              />
+            )}
           </div>
 
           <div className="form-group">
@@ -180,34 +209,14 @@ const AddPropertyModal = ({ onAdd, onClose }: Props) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Imagen de portada</label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <input
-                type="text"
-                className="form-input"
-                style={{ flex: 1 }}
-                value={imageUrl}
-                onChange={e => handleImageChange(e.target.value)}
-                placeholder="URL de la imagen o selecciona un archivo..."
-              />
-              <div style={{ position: 'relative', overflow: 'hidden' }}>
-                <button className="btn-outline" type="button" style={{ height: '100%', whiteSpace: 'nowrap', padding: '10px 14px' }}>Subir Archivo</button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      handleImageChange(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                  }}
-                  style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                />
-              </div>
-            </div>
+            <label className="form-label">URL imagen de portada</label>
+            <input
+              type="text"
+              className="form-input"
+              value={imageUrl}
+              onChange={e => handleImageChange(e.target.value)}
+              placeholder="https://..."
+            />
           </div>
 
           {/* Preview en tiempo real */}
