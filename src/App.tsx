@@ -27,6 +27,7 @@ import GuideInteractiveView from './pages/GuideInteractiveView';
 import LandingPage from './pages/LandingPage';
 import AnfitrionesCursosPage from './pages/AnfitrionesCursosPage';
 import CalculadoraPrecio from './pages/CalculadoraPrecio';
+import ManualLimpieza from './pages/ManualLimpieza';
 
 // Authenticated section — only renders when logged in
 const AuthenticatedApp = () => {
@@ -72,6 +73,7 @@ const AppContent = () => {
       <Route path="/landing"                    element={<LandingPage />} />
       <Route path="/calculadora-precio"         element={<CalculadoraPrecio />} />
       <Route path="/anfitriones"                element={<AnfitrionesCursosPage />} />
+      <Route path="/manual-limpieza"            element={<ManualLimpieza />} />
       <Route path="/guia/:id"                   element={<GuideInteractiveView />} />
       <Route path="/guias/:id/interactiva"      element={<GuideInteractiveView />} />
       <Route path="/guias/:id/pdf"              element={<GuidePdfView />} />
