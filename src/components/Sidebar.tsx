@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Home, CalendarCheck, Wallet, Package, Users, BarChart3, TrendingUp, Trash2, Pencil, BookOpen, Rocket } from 'lucide-react';
+import { LayoutDashboard, Home, CalendarCheck, Wallet, Package, Users, BarChart3, TrendingUp, Trash2, Pencil, BookOpen, Rocket, Calculator } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { usePermissions } from '../hooks/usePermissions';
 import UserSwitcher from './UserSwitcher';
@@ -63,6 +63,13 @@ const Sidebar = () => {
           style={{ color: '#F97316', fontWeight: 700 }}
         >
           <Rocket size={20} /> Landing Anfitriones
+        </NavLink>
+        <NavLink
+          to="/calculadora-precio"
+          className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}
+          style={{ color: '#FF5A5F', fontWeight: 700 }}
+        >
+          <Calculator size={20} /> Calculadora de Precio
         </NavLink>
 
         {(showEdit || showDelete) && (

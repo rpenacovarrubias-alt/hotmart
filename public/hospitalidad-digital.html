@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hospitalidad Digital | Calculadora de Precio Dinámico para Airbnb México</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #fbf9f8; }
+  ::-webkit-scrollbar-thumb { background: #e2bebc; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #FF5A5F; }
+
+  /* Calculator styles */
+  .calc-panel { display: none; }
+  .calc-panel.active { display: block; }
+  .calc-step { flex:1; padding:10px 8px; text-align:center; border-right:0.5px solid #e2bebc; cursor:pointer; transition:background 150ms; }
+  .calc-step:last-child { border-right:none; }
+  .calc-step.active { background:#FFF0F0; }
+  .calc-step.active .step-num { background:#FF5A5F; color:white; }
+  .calc-step.active .step-lbl { color:#FF5A5F; }
+  .step-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:#f5f3f3; border:0.5px solid #8e706f; font-size:12px; font-weight:600; margin-bottom:3px; }
+  .step-lbl { font-size:11px; color:#5a403f; display:block; }
+  .chip { padding:5px 13px; border:0.5px solid #8e706f; border-radius:20px; font-size:12px; cursor:pointer; background:white; color:#5a403f; transition:all 120ms; user-select:none; display:inline-block; margin:3px; }
+  .chip.on { background:#FFF0F0; border-color:#FF5A5F; color:#FF5A5F; font-weight:500; }
+  .calc-field label { display:block; font-size:11px; font-weight:600; color:#5a403f; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:5px; }
+  .calc-field input, .calc-field select { width:100%; padding:8px 12px; border:0.5px solid #8e706f; border-radius:8px; background:white; color:#1b1c1c; font-size:13px; font-family:Inter,sans-serif; }
+  .calc-card { background:white; border:0.5px solid #e2bebc; border-radius:12px; padding:1.25rem; margin-bottom:1rem; }
+  .calc-card-title { font-size:12px; font-weight:600; color:#5a403f; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1rem; }
+  .price-box { background:#FFF0F0; border:0.5px solid #FF5A5F; border-radius:12px; padding:1.25rem; text-align:center; }
+  .ctx-tab { padding:6px 14px; border:0.5px solid #e2bebc; border-radius:20px; background:white; font-size:12px; color:#5a403f; cursor:pointer; margin:3px; }
+  .ctx-tab.on { background:#FFF0F0; border-color:#FF5A5F; color:#FF5A5F; font-weight:500; }
+  .extractor-box { border:1.5px dashed #FF5A5F; border-radius:12px; padding:1.25rem; background:#FFF8F8; }
+  .mode-toggle { display:flex; border:0.5px solid #e2bebc; border-radius:8px; overflow:hidden; width:fit-content; margin-bottom:1rem; }
+  .mode-toggle button { padding:7px 20px; border:none; background:#f5f3f3; color:#5a403f; font-size:13px; cursor:pointer; font-family:Inter,sans-serif; }
+  .mode-toggle button.on { background:#FF5A5F; color:white; font-weight:600; }
+  .range-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:end; }
+  .range-sep { font-size:13px; color:#5a403f; padding-bottom:8px; text-align:center; font-weight:600; }
+  .day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .day-cell { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 4px; border:0.5px solid #e2bebc; border-radius:8px; cursor:pointer; transition:all 120ms; }
+  .day-cell.on { background:#FFF0F0; border-color:#FF5A5F; }
+  .day-cell.we { border-color:#00A699; }
+  .day-cell.on.we { background:#E6F7F6; border-color:#00A699; }
+  .day-cell.on .dlbl { color:#FF5A5F; }
+  .day-cell.on.we .dlbl { color:#00A699; }
+  .dlbl { font-size:11px; font-weight:600; }
+  .dmult { font-size:10px; color:#8e706f; }
+  .success-box { display:none; flex-direction:row; gap:12px; align-items:flex-start; padding:14px 16px; background:#F0FDF4; border:0.5px solid #86EFAC; border-radius:10px; margin-top:12px; }
+  .success-box.show { display:flex; }
+  .check-circle { width:28px; height:28px; border-radius:50%; background:#22C55E; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  /* WhatsApp floating button */
+  .wa-float { position:fixed; bottom:28px; right:28px; z-index:9999; }
+  .wa-btn { display:flex; align-items:center; gap:10px; background:#25D366; color:white; padding:12px 20px; border-radius:50px; box-shadow:0 4px 20px rgba(37,211,102,0.4); text-decoration:none; font-family:Inter,sans-serif; font-size:14px; font-weight:600; transition:transform 200ms, box-shadow 200ms; }
+  .wa-btn:hover { transform:scale(1.05); box-shadow:0 6px 28px rgba(37,211,102,0.5); }
+  .wa-pulse { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 4px 20px rgba(37,211,102,0.4)} 50%{box-shadow:0 4px 32px rgba(37,211,102,0.7)} }
+
+  /* Listing copy section */
+  .copy-section { border:0.5px solid #e2bebc; border-radius:10px; overflow:hidden; margin-bottom:8px; }
+  .copy-header { padding:9px 14px; background:#f5f3f3; font-size:12px; font-weight:600; color:#5a403f; display:flex; justify-content:space-between; align-items:center; border-bottom:0.5px solid #e2bebc; }
+  .copy-body { padding:11px 14px; background:white; font-size:13px; color:#1b1c1c; line-height:1.7; }
+  .copy-btn { font-size:11px; padding:3px 10px; border:0.5px solid #e2bebc; border-radius:6px; background:transparent; color:#8e706f; cursor:pointer; }
+
+  /* Animated entrance */
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation: fadeUp 0.5s ease both; }
+</style>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode:"class",
+    theme:{
+      extend:{
+        colors:{
+          "primary":"#FF5A5F","on-primary":"#ffffff","primary-container":"#FF5A5F",
+          "secondary":"#00A699","on-secondary":"#ffffff","secondary-container":"#E6F7F6",
+          "surface":"#fbf9f8","surface-container-low":"#f5f3f3","surface-container-lowest":"#ffffff",
+          "surface-container":"#f0eded","surface-container-high":"#eae8e7","surface-container-highest":"#e4e2e2",
+          "on-surface":"#1b1c1c","on-surface-variant":"#5a403f",
+          "outline":"#8e706f","outline-variant":"#e2bebc",
+          "background":"#fbf9f8","on-background":"#1b1c1c",
+          "on-tertiary-fixed":"#1a1a2e","tertiary-fixed":"#e2e0fc","tertiary-fixed-dim":"#c6c4df",
+          "secondary-fixed":"#7af7e8","on-secondary-fixed":"#00201d",
+          "primary-fixed":"#ffdad8","primary-fixed-dim":"#ffb3b0","on-primary-container":"#ffffff"
+        },
+        spacing:{"gutter":"24px","xs":"4px","lg":"48px","xl":"80px","md":"24px","margin-desktop":"64px","margin-mobile":"16px","sm":"12px","base":"8px"},
+        fontFamily:{sans:["Inter","sans-serif"]},
+        fontSize:{
+          "display":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"700"}],
+          "headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"600"}],
+          "headline-md":["24px",{lineHeight:"32px",fontWeight:"600"}],
+          "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+          "body-md":["16px",{lineHeight:"24px",fontWeight:"400"}],
+          "label-md":["14px",{lineHeight:"20px",letterSpacing:"0.01em",fontWeight:"500"}],
+          "label-sm":["12px",{lineHeight:"16px",fontWeight:"600"}]
+        }
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-sans overflow-x-hidden">
+
+<!-- ═══════════════ NAVBAR ═══════════════ -->
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md shadow-sm" id="top">
+<nav class="flex justify-between items-center h-20 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto w-full">
+  <a href="#top" class="flex items-center gap-3 text-decoration-none">
+    <img alt="Hospitalidad Digital" src="https://airbnb-cohost-app.vercel.app/logo-coanfitriones.png" class="h-10 w-auto object-contain"/>
+    <span class="font-bold text-headline-md text-on-surface hidden sm:block">Hospitalidad Digital</span>
+  </a>
+  <div class="hidden md:flex items-center gap-8">
+    <a href="#inicio" class="text-primary font-semibold border-b-2 border-primary pb-1 text-label-md">Inicio</a>
+    <a href="#calculadora" class="text-on-surface-variant font-medium hover:text-primary transition-colors text-label-md">Calculadora</a>
+    <a href="#beneficios" class="text-on-surface-variant font-medium hover:text-primary transition-colors text-label-md">Beneficios</a>
+    <a href="#testimonios" class="text-on-surface-variant font-medium hover:text-primary transition-colors text-label-md">Testimonios</a>
+    <a href="#contacto" class="text-on-surface-variant font-medium hover:text-primary transition-colors text-label-md">Contacto</a>
+  </div>
+  <a href="#calculadora" class="bg-primary text-white px-6 py-3 rounded-lg text-label-md font-bold hover:brightness-110 active:scale-95 transition-all">
+    Calcular mi precio
+  </a>
+</nav>
+</header>
+
+<main class="pt-20">
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="relative overflow-hidden py-xl md:py-24" id="inicio">
+  <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop grid md:grid-cols-2 gap-xl items-center">
+    <div class="flex flex-col gap-md z-10 fade-up">
+      <div class="flex items-center gap-2">
+        <span class="text-secondary font-bold text-label-md tracking-wider uppercase">Co-hosting experto en México</span>
+        <span class="bg-secondary-container text-secondary text-xs font-bold px-3 py-1 rounded-full">Querétaro, Qro.</span>
+      </div>
+      <h1 class="font-bold text-display text-on-surface leading-tight">
+        Maximiza tus ingresos como <span class="text-primary">anfitrión Airbnb</span>
+      </h1>
+      <p class="text-on-surface-variant text-body-lg max-w-xl">
+        Herramientas de precio dinámico, gestión y automatización para co-hosts profesionales en México. Calcula el precio óptimo de tu propiedad en minutos.
+      </p>
+      <div class="flex items-center gap-3 mt-sm">
+        <div class="flex -space-x-2">
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe7bnwGmPTbPEq9R8catVuue1IhVaU2988deLC5OoFTe2_M_XlT1OsV8d8LLaLLdTQ6vmJCXvR3bpKkxnOG_TWJCORVRXpjFU-qKpEid1XSm7fX9tx3cV0FSnz_rC0aniTpKz2O3hjtmqjUAinxFc5dxQGIa834OXag8stmD-lwe2tIAUOFbh0fPjiDxu_k-WWdxOoA4lXr7Be-EssQW93DC_Z6Q52UWGR_s7f_CvMk7-10zqDgYx_pgD8ImEpbB2fW5f6dfElAX4" class="w-8 h-8 rounded-full border-2 border-white object-cover" alt=""/>
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBObMYeoYzlA766hXVC07S8XZe3F8wzXlYBk3BbqJDGIWmn6SNvHWf68z9l6-ST2C8fIuSwQxJeQhB4VauhtJmF4ghZG7f_1Lwb6pXb1TAdCi2Evz89kKXR_TcoGh7Je7VkKav8QDpyVwW9q2FTTfq_4t4fdVPJt9ZZ_bJxxhgbAQMaBcANmIqd7bmSSMm_YfXcQbSd-1hr_IcjQaBX8WtEw4rktcr1YtnPIojY_9HdeHbgCyS8qC3maPiGQo-l_KBLaqEeWzc4LZw" class="w-8 h-8 rounded-full border-2 border-white object-cover" alt=""/>
+          <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEzQA0hg6pktgNKAeNjMXuoHncSWq9ppevyv3PoEKoWiywZXZqFUKeLr5id2rn-1bQrH0W0jlA5xT5P1aFg-3L_3PAj-np7W8nr06e_mdUVm_c92STcSCoTVu20qXn4MP769d3ByU42l2jAFO1BcNogjw9aLasqKzynNMd6kbxiE4AXUO-0CDf3BoeFW9nV3Vz0q75KYHxlREOed_GYICY5WUi308HOfBQvjpfTGQ7grau42evN4CDte7T_1xE5v6HVp0nkWaGsM8" class="w-8 h-8 rounded-full border-2 border-white object-cover" alt=""/>
+        </div>
+        <span class="text-label-md text-on-surface-variant"><strong class="text-on-surface">500+</strong> anfitriones activos en México</span>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-sm mt-md">
+        <a href="#calculadora" class="bg-primary text-white px-8 py-4 rounded-xl font-bold text-headline-md shadow-lg hover:scale-105 transition-transform text-center">
+          Calcular mi precio ideal →
+        </a>
+        <a href="#beneficios" class="border-2 border-outline text-on-surface px-8 py-4 rounded-xl font-bold text-headline-md hover:bg-surface-container transition-colors text-center">
+          Ver cómo funciona
+        </a>
+      </div>
+    </div>
+    <div class="relative fade-up" style="animation-delay:0.15s">
+      <div class="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl" style="background:rgba(122,247,232,0.2)"></div>
+      <div class="bg-surface-container-highest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant p-4 md:p-6">
+        <img alt="Dashboard de anfitrión Airbnb" class="w-full h-auto rounded-lg shadow-md" src="https://lh3.googleusercontent.com/aida/AP1WRLviQRLV-_m-bUgMk-dyadTwYB8GRE_Wrb4D2qVPQc47BXkvli0ZRr2w7_daCsDbqZ_SuNneamEiACdI-3zSI7300KVwz9ZfgzTqTDyFnNl6oAEygciaTH3tRBWp9VH4vCPFxVcL3q9uWLkF1y-mnQ4am-ZEl_KpQsgL9SFniMSZGA3QRziG0yOwvUjuBha5kzb0sBmxjEg7Eg7zwnh2UcuRhzRuqCNtLD20lr3orOKnFu09Btx0dduWSg"/>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BENEFICIOS ═══════════════ -->
+<section class="py-xl bg-surface-container-low" id="beneficios">
+  <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+    <div class="text-center mb-xl">
+      <h2 class="font-bold text-display text-on-surface mb-sm">Por qué elegirnos</h2>
+      <p class="text-on-surface-variant text-body-lg max-w-2xl mx-auto">Tecnología y hospitalidad de clase mundial para tu propiedad en el mercado mexicano.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+      <div class="bg-surface-container-lowest p-md rounded-xl shadow-sm border border-outline-variant hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-primary-fixed rounded-xl flex items-center justify-center mb-md">
+          <span class="material-symbols-outlined text-4xl text-primary">real_estate_agent</span>
+        </div>
+        <h3 class="font-bold text-headline-md mb-sm text-on-surface">Precio inteligente</h3>
+        <p class="text-on-surface-variant text-body-md">Ajusta tu tarifa noche por noche como lo hace Airbnb Smart Pricing, pero con control total sobre tus mínimos y máximos.</p>
+      </div>
+      <div class="bg-surface-container-lowest p-md rounded-xl shadow-sm border border-outline-variant hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 bg-secondary-container rounded-xl flex items-center justify-center mb-md">
+          <span class="material-symbols-outlined text-4xl text-secondary">trending_up</span>
+        </div>
+        <h3 class="font-bold text-headline-md mb-sm text-on-surface">Más reservas</h3>
+        <p class="text-on-surface-variant text-body-md">Posiciona tu anuncio en el top de búsqueda de Airbnb con la estrategia de precios y el score de anuncio correctos.</p>
+      </div>
+      <div class="bg-surface-container-lowest p-md rounded-xl shadow-sm border border-outline-variant hover:shadow-lg transition-shadow">
+        <div class="w-16 h-16 rounded-xl flex items-center justify-center mb-md" style="background:#ffdad8">
+          <span class="material-symbols-outlined text-4xl" style="color:#b52330">support_agent</span>
+        </div>
+        <h3 class="font-bold text-headline-md mb-sm text-on-surface">Operación rentable</h3>
+        <p class="text-on-surface-variant text-body-md">Entiende tu RevPAR, ADR y ocupación objetivo para maximizar ingresos anuales sin sacrificar calidad de servicio.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CALCULADORA ═══════════════ -->
+<section class="py-xl" id="calculadora">
+  <div class="max-w-5xl mx-auto px-margin-mobile md:px-margin-desktop">
+    <div class="text-center mb-xl">
+      <span class="bg-primary text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Herramienta gratuita</span>
+      <h2 class="font-bold text-display text-on-surface mt-md mb-sm">Calculadora de Precio Dinámico</h2>
+      <p class="text-on-surface-variant text-body-lg max-w-2xl mx-auto">La única herramienta que calcula el precio óptimo de tu propiedad considerando temporada, competencia local, amenidades y eventos — en minutos.</p>
+    </div>
+
+    <!-- Stepper -->
+    <div style="display:flex; border:0.5px solid #e2bebc; border-radius:12px; overflow:hidden; margin-bottom:1.5rem; background:white;">
+      <div class="calc-step active" onclick="gotoStep(1)"><div class="step-num" id="sn1">1</div><span class="step-lbl" id="sl1">Tu propiedad</span></div>
+      <div class="calc-step" onclick="gotoStep(2)"><div class="step-num" id="sn2">2</div><span class="step-lbl" id="sl2">Mercado</span></div>
+      <div class="calc-step" onclick="gotoStep(3)"><div class="step-num" id="sn3">3</div><span class="step-lbl" id="sl3">Contexto</span></div>
+      <div class="calc-step" onclick="gotoStep(4)"><div class="step-num" id="sn4">4</div><span class="step-lbl" id="sl4">Resultado</span></div>
+    </div>
+
+    <!-- PASO 1 -->
+    <div class="calc-panel active" id="cp1">
+      <!-- Extractor de anuncio existente -->
+      <div class="extractor-box mb-4">
+        <div style="font-size:14px; font-weight:600; color:#FF5A5F; margin-bottom:4px;">¿Ya tienes un anuncio en Airbnb?</div>
+        <div style="font-size:12px; color:#5a403f; margin-bottom:12px;">Pega la URL y extraemos todos los datos automáticamente.</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="url" id="my-url" placeholder="https://www.airbnb.mx/rooms/12345678" style="flex:1; padding:9px 14px; border:0.5px solid #FF5A5F; border-radius:8px; font-size:13px; font-family:Inter,sans-serif; background:white;"/>
+          <button onclick="extractMyListing()" style="padding:9px 20px; background:#FF5A5F; color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:Inter,sans-serif; white-space:nowrap;">Extraer mis datos</button>
+        </div>
+        <div class="success-box" id="success-msg">
+          <div class="check-circle"><svg viewBox="0 0 24 24" width="16" height="16" stroke="white" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div><div style="font-size:13px; font-weight:600; color:#15803D; margin-bottom:3px;">¡Datos pegados en los campos!</div><div style="font-size:12px; color:#166534; line-height:1.5;">Revisa los campos y completa lo que falte manualmente.</div></div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Identificación</div>
+        <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+          <div class="calc-field"><label>Título de tu anuncio</label><input type="text" id="f-title" placeholder="Ej: Casa moderna con alberca en Querétaro Centro"/></div>
+          <div class="calc-field"><label>Tipo de propiedad</label>
+            <div><span class="chip on" onclick="tog(this)">Casa completa</span><span class="chip" onclick="tog(this)">Departamento</span><span class="chip" onclick="tog(this)">Cuarto privado</span><span class="chip" onclick="tog(this)">Villa</span><span class="chip" onclick="tog(this)">Loft</span></div>
+          </div>
+          <div class="calc-field"><label>Estatus del anfitrión</label>
+            <div><span class="chip" onclick="tog(this)">Nuevo anfitrión</span><span class="chip on" onclick="tog(this)">Anfitrión activo</span><span class="chip" onclick="tog(this)">Superhost ⭐</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Capacidad</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+          <div class="calc-field"><label>Recámaras</label><input type="number" id="f-bed" placeholder="2" min="0"/></div>
+          <div class="calc-field"><label>Personas máx.</label><input type="number" id="f-guests" placeholder="4" min="1"/></div>
+          <div class="calc-field"><label>Camas totales</label><input type="number" id="f-beds" placeholder="3" min="1"/></div>
+          <div class="calc-field" style="grid-column:1/-1"><label>Baños</label>
+            <div><span class="chip" onclick="tog(this)">1</span><span class="chip on" onclick="tog(this)">1.5</span><span class="chip" onclick="tog(this)">2</span><span class="chip" onclick="tog(this)">2.5</span><span class="chip" onclick="tog(this)">3+</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Ubicación</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="calc-field"><label>Código postal / Ciudad</label><input type="text" id="f-cp" placeholder="76000 — Querétaro, Qro."/></div>
+          <div class="calc-field"><label>Ciudad</label>
+            <select id="f-city"><option>Querétaro</option><option>Ciudad de México</option><option>Guadalajara</option><option>Monterrey</option><option>Cancún / Riviera Maya</option><option>Los Cabos</option><option>Puerto Vallarta</option><option>Oaxaca</option><option>San Miguel de Allende</option><option>Otra</option></select>
+          </div>
+          <div class="calc-field" style="grid-column:1/-1"><label>Tipo de zona</label>
+            <div><span class="chip on" onclick="tog(this)">Centro / Turística</span><span class="chip" onclick="tog(this)">Residencial</span><span class="chip" onclick="tog(this)">Cerca playa</span><span class="chip" onclick="tog(this)">Cerca aeropuerto</span><span class="chip" onclick="tog(this)">Rural / Naturaleza</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Amenidades</div>
+        <div><span class="chip on" onclick="tog(this)">Alberca</span><span class="chip on" onclick="tog(this)">Estacionamiento</span><span class="chip" onclick="tog(this)">Jacuzzi</span><span class="chip on" onclick="tog(this)">Cocina equipada</span><span class="chip" onclick="tog(this)">Jardín / Terraza</span><span class="chip" onclick="tog(this)">Gym</span><span class="chip" onclick="tog(this)">Cargador EV</span><span class="chip" onclick="tog(this)">Pet friendly</span><span class="chip on" onclick="tog(this)">WiFi alta velocidad</span><span class="chip" onclick="tog(this)">Smart TV / Netflix</span><span class="chip" onclick="tog(this)">BBQ / Asador</span><span class="chip" onclick="tog(this)">Vista panorámica</span><span class="chip" onclick="tog(this)">A/C</span><span class="chip" onclick="tog(this)">Chimenea</span></div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Calificación actual</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="calc-field"><label>Calificación promedio</label>
+            <div><span class="chip on" onclick="tog(this)">Sin anuncio aún</span><span class="chip" onclick="tog(this)">4.0 – 4.4</span><span class="chip" onclick="tog(this)">4.5 – 4.7</span><span class="chip" onclick="tog(this)">4.8 – 4.9</span><span class="chip" onclick="tog(this)">5.0 perfecto</span></div>
+          </div>
+          <div class="calc-field"><label>Número de reseñas</label>
+            <div><span class="chip on" onclick="tog(this)">0 (nuevo)</span><span class="chip" onclick="tog(this)">1–10</span><span class="chip" onclick="tog(this)">11–50</span><span class="chip" onclick="tog(this)">51–100</span><span class="chip" onclick="tog(this)">100+</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.5rem;">
+        <span style="font-size:12px; color:#8e706f;">Paso 1 de 4</span>
+        <button onclick="gotoStep(2)" style="background:#FF5A5F; color:white; padding:10px 24px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:Inter,sans-serif;">Continuar a investigación de mercado →</button>
+      </div>
+    </div>
+
+    <!-- PASO 2 -->
+    <div class="calc-panel" id="cp2">
+      <div class="calc-card">
+        <div class="calc-card-title">Modo de investigación</div>
+        <div class="mode-toggle">
+          <button class="on" id="bm" onclick="setMode('m')">Manual</button>
+          <button id="ba" onclick="setMode('a')">Automático</button>
+        </div>
+
+        <div id="mode-m">
+          <div style="font-size:12px; color:#8e706f; margin-bottom:10px;">Ingresa los datos de hasta 3 propiedades similares en tu zona.</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; min-width:560px;">
+              <thead><tr>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">#</th>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">Tipo</th>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">Precio/noche</th>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">Recám.</th>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">Pers.</th>
+                <th style="font-size:11px; color:#8e706f; padding:6px 8px; border-bottom:0.5px solid #e2bebc; text-align:left;">Calif.</th>
+              </tr></thead>
+              <tbody>
+                <tr><td style="padding:8px; font-size:11px; color:#8e706f;">C1</td><td style="padding:8px;"><select style="padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px; font-family:Inter,sans-serif; background:white;"><option>Casa completa</option><option>Departamento</option><option>Cuarto privado</option><option>Villa</option><option>Loft</option></select></td><td style="padding:8px;"><input type="number" placeholder="1200" style="width:80px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px; font-family:Inter,sans-serif;"/></td><td style="padding:8px;"><input type="number" placeholder="2" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="number" placeholder="4" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="text" placeholder="4.85" style="width:60px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td></tr>
+                <tr><td style="padding:8px; font-size:11px; color:#8e706f;">C2</td><td style="padding:8px;"><select style="padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px; font-family:Inter,sans-serif; background:white;"><option>Departamento</option><option>Casa completa</option><option>Cuarto privado</option></select></td><td style="padding:8px;"><input type="number" placeholder="950" style="width:80px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="number" placeholder="2" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="number" placeholder="4" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="text" placeholder="4.72" style="width:60px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td></tr>
+                <tr><td style="padding:8px; font-size:11px; color:#8e706f;">C3</td><td style="padding:8px;"><select style="padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px; font-family:Inter,sans-serif; background:white;"><option>Casa completa</option><option>Departamento</option><option>Villa</option></select></td><td style="padding:8px;"><input type="number" placeholder="1450" style="width:80px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="number" placeholder="3" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="number" placeholder="6" style="width:50px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td><td style="padding:8px;"><input type="text" placeholder="4.91" style="width:60px; padding:5px 7px; border:0.5px solid #e2bebc; border-radius:6px; font-size:12px;"/></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="mode-a" style="display:none;">
+          <div style="font-size:12px; color:#8e706f; margin-bottom:10px;">Pega hasta 5 URLs de anuncios Airbnb similares en tu zona.</div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#8e706f; min-width:16px;">1</span><input type="url" placeholder="https://www.airbnb.mx/rooms/..." style="flex:1; padding:7px 10px; border:0.5px solid #e2bebc; border-radius:8px; font-size:13px; font-family:Inter,sans-serif;"/><button onclick="showComp(1)" style="padding:6px 14px; border:0.5px solid #e2bebc; border-radius:8px; background:white; font-size:12px; cursor:pointer; font-family:Inter,sans-serif;">Extraer</button></div>
+          <div id="cr1" style="display:none; padding:5px 24px 10px;"><div style="display:flex; flex-wrap:wrap; gap:5px;"><span style="padding:3px 9px; background:#E6F7F6; border:0.5px solid #00A699; border-radius:20px; font-size:11px; color:#00A699; font-weight:600;">Casa completa</span><span style="padding:3px 9px; background:#E6F7F6; border:0.5px solid #00A699; border-radius:20px; font-size:11px; color:#00A699; font-weight:600;">2 rec.</span><span style="padding:3px 9px; background:#E6F7F6; border:0.5px solid #00A699; border-radius:20px; font-size:11px; color:#00A699; font-weight:600;">$1,150/noche</span><span style="padding:3px 9px; background:#E6F7F6; border:0.5px solid #00A699; border-radius:20px; font-size:11px; color:#00A699; font-weight:600;">★ 4.87</span><span style="padding:3px 9px; background:#E6F7F6; border:0.5px solid #00A699; border-radius:20px; font-size:11px; color:#00A699; font-weight:600;">78% ocup.</span></div></div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#8e706f; min-width:16px;">2</span><input type="url" placeholder="https://www.airbnb.mx/rooms/..." style="flex:1; padding:7px 10px; border:0.5px solid #e2bebc; border-radius:8px; font-size:13px; font-family:Inter,sans-serif;"/><button style="padding:6px 14px; border:0.5px solid #e2bebc; border-radius:8px; background:white; font-size:12px; cursor:pointer; font-family:Inter,sans-serif;">Extraer</button></div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#8e706f; min-width:16px;">3</span><input type="url" placeholder="https://www.airbnb.mx/rooms/..." style="flex:1; padding:7px 10px; border:0.5px solid #e2bebc; border-radius:8px; font-size:13px; font-family:Inter,sans-serif;"/><button style="padding:6px 14px; border:0.5px solid #e2bebc; border-radius:8px; background:white; font-size:12px; cursor:pointer; font-family:Inter,sans-serif;">Extraer</button></div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#8e706f; min-width:16px;">4</span><input type="url" placeholder="https://www.airbnb.mx/rooms/..." style="flex:1; padding:7px 10px; border:0.5px solid #e2bebc; border-radius:8px; font-size:13px; font-family:Inter,sans-serif;"/><button style="padding:6px 14px; border:0.5px solid #e2bebc; border-radius:8px; background:white; font-size:12px; cursor:pointer; font-family:Inter,sans-serif;">Extraer</button></div>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span style="font-size:11px; color:#8e706f; min-width:16px;">5</span><input type="url" placeholder="https://www.airbnb.mx/rooms/..." style="flex:1; padding:7px 10px; border:0.5px solid #e2bebc; border-radius:8px; font-size:13px; font-family:Inter,sans-serif;"/><button style="padding:6px 14px; border:0.5px solid #e2bebc; border-radius:8px; background:white; font-size:12px; cursor:pointer; font-family:Inter,sans-serif;">Extraer</button></div>
+          <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+            <button onclick="integrate()" style="background:#00A699; color:white; padding:8px 20px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:Inter,sans-serif;">Integrar todos a la calculadora</button>
+          </div>
+          <div id="int-msg" style="display:none; margin-top:10px; padding:10px 14px; background:#F0FDF4; border:0.5px solid #86EFAC; border-radius:8px; font-size:13px; color:#15803D;">✓ Anuncios integrados — Promedio: <strong>$1,070/noche</strong> · ★ <strong>4.81</strong> · <strong>71%</strong> ocupación</div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:1.5rem;">
+        <button onclick="gotoStep(1)" style="padding:10px 20px; border:0.5px solid #e2bebc; border-radius:10px; background:white; font-size:14px; font-family:Inter,sans-serif; cursor:pointer;">← Atrás</button>
+        <button onclick="gotoStep(3)" style="background:#FF5A5F; color:white; padding:10px 24px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:Inter,sans-serif;">Continuar a contexto temporal →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3 -->
+    <div class="calc-panel" id="cp3">
+      <div class="calc-card">
+        <div class="calc-card-title">Mes / Meses objetivo</div>
+        <div class="range-grid" style="margin-bottom:12px;">
+          <div class="calc-field"><label>De:</label><select id="mes-de" onchange="calcMeses()"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5" selected>Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div>
+          <div class="range-sep">→</div>
+          <div class="calc-field"><label>A:</label><select id="mes-a" onchange="calcMeses()"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7" selected>Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div>
+        </div>
+        <div id="mes-result" style="font-size:12px; color:#5a403f; padding:8px 12px; background:#f5f3f3; border-radius:8px; border:0.5px solid #e2bebc;">Rango: <strong>Mayo → Julio</strong> (3 meses) — Temporada: <span style="font-weight:600; color:#D97706;">Media-Alta</span></div>
+        <div class="calc-field" style="margin-top:12px;"><label>Tipo de temporada</label>
+          <div><span class="chip" onclick="tog(this)">Baja</span><span class="chip on" onclick="tog(this)">Media</span><span class="chip" onclick="tog(this)">Alta</span><span class="chip" onclick="tog(this)">Puente / Festivo</span></div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Día / Días de la semana</div>
+        <div style="font-size:12px; color:#8e706f; margin-bottom:10px;">Airbnb ajusta noche por noche — el precio varía según el día.</div>
+        <div class="day-grid" id="day-grid">
+          <div class="day-cell" onclick="togDay(this,'Lunes',1.0)"><span class="dlbl">Lun</span><span class="dmult">×1.0</span></div>
+          <div class="day-cell" onclick="togDay(this,'Martes',1.0)"><span class="dlbl">Mar</span><span class="dmult">×1.0</span></div>
+          <div class="day-cell" onclick="togDay(this,'Miercoles',1.0)"><span class="dlbl">Mié</span><span class="dmult">×1.0</span></div>
+          <div class="day-cell" onclick="togDay(this,'Jueves',1.05)"><span class="dlbl">Jue</span><span class="dmult">×1.05</span></div>
+          <div class="day-cell on we" onclick="togDay(this,'Viernes',1.35)"><span class="dlbl">Vie</span><span class="dmult">×1.35</span></div>
+          <div class="day-cell on we" onclick="togDay(this,'Sabado',1.45)"><span class="dlbl">Sáb</span><span class="dmult">×1.45</span></div>
+          <div class="day-cell" onclick="togDay(this,'Domingo',1.10)"><span class="dlbl">Dom</span><span class="dmult">×1.10</span></div>
+        </div>
+        <div id="day-note" style="margin-top:10px; font-size:12px; color:#5a403f; padding:8px 12px; background:#f5f3f3; border-radius:8px;">Con <strong>Vie + Sáb</strong> seleccionados: ×1.35 la noche del viernes y ×1.45 la del sábado — noche por noche.</div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Evento local</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="calc-field"><label>¿Hay evento?</label>
+            <div><span class="chip on" onclick="tog(this)">No hay evento</span><span class="chip" onclick="tog(this)">Concierto</span><span class="chip" onclick="tog(this)">Congreso</span><span class="chip" onclick="tog(this)">Feria</span><span class="chip" onclick="tog(this)">Torneo</span></div>
+          </div>
+          <div class="calc-field"><label>Impacto</label>
+            <div><span class="chip" onclick="tog(this)">Bajo (+10%)</span><span class="chip" onclick="tog(this)">Medio (+30%)</span><span class="chip" onclick="tog(this)">Alto (+60%)</span><span class="chip" onclick="tog(this)">Muy alto (+100%)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Mínimo de noches</div>
+        <div><span class="chip" onclick="tog(this)">1 noche</span><span class="chip on" onclick="tog(this)">2 noches (recomendado)</span><span class="chip" onclick="tog(this)">3 noches</span><span class="chip" onclick="tog(this)">4–7 noches</span><span class="chip" onclick="tog(this)">Semana completa</span></div>
+        <div style="border-left:3px solid #00A699; padding:12px 14px; background:#E6F7F6; border-radius:0 10px 10px 0; margin-top:12px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:#00A699; margin-bottom:4px;">Sugerencia de alto valor</div>
+          <p style="font-size:13px; color:#1b1c1c; line-height:1.6;">Un mínimo de <strong>2 noches</strong> hace tu operación más rentable. El costo de limpieza es fijo — igual si el huésped se queda 1 o 2 noches. Menos check-outs, menos estrés, más ingreso por hora de trabajo.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:1.5rem;">
+        <button onclick="gotoStep(2)" style="padding:10px 20px; border:0.5px solid #e2bebc; border-radius:10px; background:white; font-size:14px; font-family:Inter,sans-serif; cursor:pointer;">← Atrás</button>
+        <button onclick="gotoStep(4)" style="background:#FF5A5F; color:white; padding:10px 24px; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:Inter,sans-serif;">Calcular precio ⟶</button>
+      </div>
+    </div>
+
+    <!-- PASO 4 -->
+    <div class="calc-panel" id="cp4">
+      <div class="calc-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div class="calc-card-title" style="margin-bottom:0;">Precios recomendados</div>
+          <div style="display:flex; flex-wrap:wrap; gap:4px;">
+            <button class="ctx-tab on" onclick="setCtx(this,'base')">Base</button>
+            <button class="ctx-tab" onclick="setCtx(this,'we')">Fin de semana</button>
+            <button class="ctx-tab" onclick="setCtx(this,'hi')">Temporada alta</button>
+            <button class="ctx-tab" onclick="setCtx(this,'ev')">Evento</button>
+            <button class="ctx-tab" onclick="setCtx(this,'lo')">Temporada baja</button>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:1rem;">
+          <div class="price-box"><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:#FF5A5F; margin-bottom:6px; font-weight:600;">Precio sugerido</div><div style="font-size:22px; font-weight:700; color:#FF5A5F;" id="pp1">$1,050</div><div style="font-size:10px; color:#8e706f; margin-top:3px;">por noche / MXN</div></div>
+          <div style="background:#f5f3f3; border:0.5px solid #e2bebc; border-radius:12px; padding:1.25rem; text-align:center;"><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:#8e706f; margin-bottom:6px; font-weight:600;">Mínimo</div><div style="font-size:22px; font-weight:700; color:#1b1c1c;" id="pp2">$850</div><div style="font-size:10px; color:#8e706f; margin-top:3px;">no bajar de aquí</div></div>
+          <div style="background:#f5f3f3; border:0.5px solid #e2bebc; border-radius:12px; padding:1.25rem; text-align:center;"><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:#8e706f; margin-bottom:6px; font-weight:600;">Techo</div><div style="font-size:22px; font-weight:700; color:#1b1c1c;" id="pp3">$1,380</div><div style="font-size:10px; color:#8e706f; margin-top:3px;">eventos / alta</div></div>
+          <div style="background:#E6F7F6; border:0.5px solid #00A699; border-radius:12px; padding:1.25rem; text-align:center;"><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:#00A699; margin-bottom:6px; font-weight:600;">RevPAR/mes</div><div style="font-size:22px; font-weight:700; color:#00A699;" id="pp4">$22,050</div><div style="font-size:10px; color:#8e706f; margin-top:3px;">al 70% ocupación</div></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px;">
+          <div style="padding:12px; background:#f5f3f3; border-radius:10px; border:0.5px solid #e2bebc;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#8e706f; margin-bottom:4px;">Ingreso mensual est.</div><div style="font-size:18px; font-weight:700;" id="pm">$22,050</div><div style="font-size:11px; color:#8e706f; margin-top:2px;">21 noches · 70% ocupación</div></div>
+          <div style="padding:12px; background:#f5f3f3; border-radius:10px; border:0.5px solid #e2bebc;"><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:#8e706f; margin-bottom:4px;">Ingreso anual est.</div><div style="font-size:18px; font-weight:700;" id="pa">$264,600</div><div style="font-size:11px; color:#8e706f; margin-top:2px;">proyección conservadora</div></div>
+        </div>
+      </div>
+
+      <div class="calc-card">
+        <div class="calc-card-title">Tu anuncio listo para publicar</div>
+        <div class="copy-section"><div class="copy-header">Título de tu anuncio <button class="copy-btn" onclick="copyText('copy1')">Copiar</button></div><div class="copy-body" id="copy1">Casa moderna con alberca en Querétaro Centro</div></div>
+        <div class="copy-section"><div class="copy-header">Descripción principal <button class="copy-btn" onclick="copyText('copy2')">Copiar</button></div><div class="copy-body" id="copy2">Casa completa de 2 recámaras para hasta 4 personas, ubicada en zona turística de Querétaro. Alberca, estacionamiento y cocina equipada. WiFi de alta velocidad. Ideal para parejas, familias o viajes de trabajo.</div></div>
+        <div class="copy-section"><div class="copy-header">Precios por contexto <button class="copy-btn" onclick="copyText('copy3')">Copiar</button></div><div class="copy-body" id="copy3">Base: $1,050 · Fin de semana: $1,420 · Temporada alta: $1,970 · Evento: $2,630 · Mínimo recomendado: $850</div></div>
+      </div>
+
+      <div style="border-left:3px solid #00A699; padding:12px 14px; background:#E6F7F6; border-radius:0 10px 10px 0; margin-bottom:1.5rem;">
+        <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:#00A699; margin-bottom:4px;">Sugerencia de alto valor — mínimo 2 noches</div>
+        <p style="font-size:13px; color:#1b1c1c; line-height:1.6;">Con <strong>2 noches mínimas</strong> maximizas la rentabilidad. El costo de limpieza es fijo. Puedes tener el 100% de ocupación con 1 noche mínima y ganar menos que con 2 noches al 70%. Menos check-outs = menos estrés = mejor experiencia.</p>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+        <button onclick="gotoStep(3)" style="padding:10px 20px; border:0.5px solid #e2bebc; border-radius:10px; background:white; font-size:14px; font-family:Inter,sans-serif; cursor:pointer;">← Ajustar</button>
+        <a href="https://wa.me/524421314203?text=Hola%2C%20calculé%20el%20precio%20de%20mi%20propiedad%20y%20me%20gustaría%20una%20consultoría." target="_blank" style="background:#25D366; color:white; padding:10px 24px; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Hablar con un asesor
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ TESTIMONIOS ═══════════════ -->
+<section class="py-xl bg-surface-container-low overflow-hidden" id="testimonios">
+  <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-xl gap-md">
+      <div><h2 class="font-bold text-display text-on-surface">Historias de éxito</h2><p class="text-on-surface-variant text-body-lg">Anfitriones que transformaron su patrimonio.</p></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+      <div class="bg-surface p-md rounded-xl border border-outline-variant relative">
+        <div class="flex items-center gap-sm mb-md">
+          <img class="w-14 h-14 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe7bnwGmPTbPEq9R8catVuue1IhVaU2988deLC5OoFTe2_M_XlT1OsV8d8LLaLLdTQ6vmJCXvR3bpKkxnOG_TWJCORVRXpjFU-qKpEid1XSm7fX9tx3cV0FSnz_rC0aniTpKz2O3hjtmqjUAinxFc5dxQGIa834OXag8stmD-lwe2tIAUOFbh0fPjiDxu_k-WWdxOoA4lXr7Be-EssQW93DC_Z6Q52UWGR_s7f_CvMk7-10zqDgYx_pgD8ImEpbB2fW5f6dfElAX4" alt="Alejandro M."/>
+          <div><h4 class="font-bold text-on-surface">Alejandro M.</h4><p class="text-sm text-on-surface-variant">CDMX • 3 propiedades</p><div class="flex gap-0.5 mt-0.5">★★★★★</div></div>
+        </div>
+        <p class="text-on-surface text-body-md italic">"Antes sufría con la limpieza y los mensajes a media noche. Ahora solo recibo mis depósitos mensuales y veo mis métricas crecer."</p>
+      </div>
+      <div class="bg-surface p-md rounded-xl border border-outline-variant relative">
+        <div class="flex items-center gap-sm mb-md">
+          <img class="w-14 h-14 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBObMYeoYzlA766hXVC07S8XZe3F8wzXlYBk3BbqJDGIWmn6SNvHWf68z9l6-ST2C8fIuSwQxJeQhB4VauhtJmF4ghZG7f_1Lwb6pXb1TAdCi2Evz89kKXR_TcoGh7Je7VkKav8QDpyVwW9q2FTTfq_4t4fdVPJt9ZZ_bJxxhgbAQMaBcANmIqd7bmSSMm_YfXcQbSd-1hr_IcjQaBX8WtEw4rktcr1YtnPIojY_9HdeHbgCyS8qC3maPiGQo-l_KBLaqEeWzc4LZw" alt="Sofía G."/>
+          <div><h4 class="font-bold text-on-surface">Sofía G.</h4><p class="text-sm text-on-surface-variant">Puerto Vallarta • 1 villa</p><div class="flex gap-0.5 mt-0.5">★★★★★</div></div>
+        </div>
+        <p class="text-on-surface text-body-md italic">"La calculadora de precio dinámico es increíble. Mis ingresos aumentaron un 40% comparado a cuando yo misma gestionaba mi villa."</p>
+      </div>
+      <div class="bg-surface p-md rounded-xl border border-outline-variant relative">
+        <div class="flex items-center gap-sm mb-md">
+          <img class="w-14 h-14 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEzQA0hg6pktgNKAeNjMXuoHncSWq9ppevyv3PoEKoWiywZXZqFUKeLr5id2rn-1bQrH0W0jlA5xT5P1aFg-3L_3PAj-np7W8nr06e_mdUVm_c92STcSCoTVu20qXn4MP769d3ByU42l2jAFO1BcNogjw9aLasqKzynNMd6kbxiE4AXUO-0CDf3BoeFW9nV3Vz0q75KYHxlREOed_GYICY5WUi308HOfBQvjpfTGQ7grau42evN4CDte7T_1xE5v6HVp0nkWaGsM8" alt="Ricardo P."/>
+          <div><h4 class="font-bold text-on-surface">Ricardo P.</h4><p class="text-sm text-on-surface-variant">Querétaro • 5 departamentos</p><div class="flex gap-0.5 mt-0.5">★★★★★</div></div>
+        </div>
+        <p class="text-on-surface text-body-md italic">"El reporte mensual de transparencia me da total tranquilidad. Confiar mi patrimonio fue la mejor decisión que he tomado."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CTA FINAL ═══════════════ -->
+<section class="py-xl px-margin-mobile" id="contacto">
+  <div class="max-w-5xl mx-auto bg-primary rounded-3xl p-xl flex flex-col items-center text-center">
+    <h2 class="font-bold text-display mb-md text-white">¿Listo para ganar más con tu propiedad?</h2>
+    <p class="text-body-lg mb-xl max-w-2xl text-white/90">Únete a los cientos de anfitriones que ya optimizaron su precio con nuestra calculadora gratuita.</p>
+    <div class="flex flex-col sm:flex-row gap-md w-full max-w-md">
+      <a href="#calculadora" class="bg-white text-primary px-8 py-4 rounded-xl font-bold text-headline-md shadow-xl hover:brightness-105 active:scale-95 transition-all flex-1 text-center">
+        Calcular mi precio →
+      </a>
+      <a href="https://wa.me/524421314203" target="_blank" class="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-headline-md hover:bg-white/20 transition-all flex-1 text-center">
+        Hablar con asesor
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer style="background:#1a1a2e; color:#c6c4df;" class="py-xl mt-xl">
+  <div class="max-w-7xl mx-auto px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-lg py-xl">
+    <!-- Col 1: Brand + Redes -->
+    <div class="flex flex-col gap-md">
+      <div class="flex items-center gap-3">
+        <img alt="Hospitalidad Digital" src="https://airbnb-cohost-app.vercel.app/logo-coanfitriones.png" class="h-10 w-auto brightness-0 invert object-contain"/>
+        <span style="font-size:16px; font-weight:700; color:#e2e0fc;">Hospitalidad Digital</span>
+      </div>
+      <p style="font-size:14px; color:#9391ab; line-height:1.6;">Expertos en gestión vacacional y precio dinámico para anfitriones Airbnb en México.<br/><br/>📍 Querétaro, Qro., México</p>
+      <!-- Redes Sociales -->
+      <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+        <!-- TikTok -->
+        <a href="#" title="TikTok" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#FF5A5F'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34l-.01-8.15a8.3 8.3 0 004.85 1.56V5.26a4.85 4.85 0 01-1.07-.57z"/></svg>
+        </a>
+        <!-- Facebook -->
+        <a href="#" title="Facebook" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#1877F2'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <!-- Instagram -->
+        <a href="#" title="Instagram" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <!-- YouTube -->
+        <a href="#" title="YouTube" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#FF0000'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+        <!-- Bluesky -->
+        <a href="#" title="Bluesky" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#0085FF'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 600 530" fill="currentColor"><path d="m135.72 44.03c66.496 49.921 138.02 151.14 164.28 205.46 26.262-54.316 97.782-155.54 164.28-205.46 47.98-36.021 125.72-63.892 125.72 24.795 0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.3797-3.6904-10.832-3.7077-7.8964-0.0174-2.9357-1.1937 0.51669-3.7077 7.8964-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.4491-163.25-81.433-5.9562-21.282-16.111-152.36-16.111-170.07 0-88.687 77.742-60.816 125.72-24.795z"/></svg>
+        </a>
+        <!-- Website -->
+        <a href="#" title="Página web" style="color:#9391ab; transition:color 200ms;" onmouseover="this.style.color='#FF5A5F'" onmouseout="this.style.color='#9391ab'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Col 2: Herramientas -->
+    <div class="flex flex-col gap-sm">
+      <h4 style="font-weight:700; color:#7af7e8; margin-bottom:8px; font-size:14px; text-transform:uppercase; letter-spacing:0.06em;">Herramientas</h4>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#calculadora" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Calculadora de precios</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Optimización de anuncio</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Kit de Mensajes Airbnb</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Kit de Limpieza profesional</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Check list de anuncios</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Guía interactiva para Huéspedes</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Plantillas de mensajes automáticos</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Curso de Limpieza profesional</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Consultoría</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Estrategia de precios</a>
+    </div>
+
+    <!-- Col 3: Recursos -->
+    <div class="flex flex-col gap-sm">
+      <h4 style="font-weight:700; color:#7af7e8; margin-bottom:8px; font-size:14px; text-transform:uppercase; letter-spacing:0.06em;">Recursos</h4>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Comunidad Hospitalidad Digital</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Casos de éxito</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Ayuda y Soporte</a>
+      <a style="color:#9391ab; font-size:13px; text-decoration:none; transition:color 200ms;" href="#contacto" onmouseover="this.style.color='#7af7e8'" onmouseout="this.style.color='#9391ab'">Contacto</a>
+    </div>
+
+    <!-- Col 4: Contacto -->
+    <div class="flex flex-col gap-sm">
+      <h4 style="font-weight:700; color:#7af7e8; margin-bottom:8px; font-size:14px; text-transform:uppercase; letter-spacing:0.06em;">Contacto</h4>
+      <p style="color:#9391ab; font-size:13px; line-height:1.7;">📍 Querétaro, Qro., México</p>
+      <p style="color:#9391ab; font-size:13px;">📧 hola@hospitalidaddigital.mx</p>
+      <a href="https://wa.me/524421314203" target="_blank" style="color:#9391ab; font-size:13px; text-decoration:none; display:flex; align-items:center; gap:6px; transition:color 200ms;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='#9391ab'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp: 442 131 4203
+      </a>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-margin-desktop" style="border-top:0.5px solid rgba(198,196,223,0.15); padding-top:1.5rem; padding-bottom:2rem;">
+    <p style="font-size:12px; color:#5d5c74; text-align:center;">© 2026 Hospitalidad Digital · Todos los derechos reservados · <a href="#" style="color:#5d5c74; text-decoration:none;">Política de privacidad</a> · <a href="#" style="color:#5d5c74; text-decoration:none;">Términos de uso</a></p>
+  </div>
+</footer>
+
+<!-- ═══════════════ WHATSAPP FLOTANTE ═══════════════ -->
+<div class="wa-float">
+  <a href="https://wa.me/524421314203?text=Hola%2C%20me%20interesa%20conocer%20más%20sobre%20Hospitalidad%20Digital%20en%20Querétaro." target="_blank" class="wa-btn wa-pulse">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span>Querétaro, Qro.</span>
+  </a>
+</div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',function(e){
+    const t=document.querySelector(this.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+  });
+});
+
+// Sticky header
+window.addEventListener('scroll',()=>{
+  document.querySelector('header').classList.toggle('shadow-md',window.scrollY>20);
+});
+
+// Calculator steps
+function gotoStep(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('cp'+i).classList.toggle('active',i===n);
+    const s=document.getElementById('sn'+i).parentElement;
+    s.classList.toggle('active',i===n);
+  });
+  document.getElementById('calculadora').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// Chip toggle
+function tog(el){el.classList.toggle('on');}
+
+// Mode toggle
+function setMode(m){
+  document.getElementById('mode-m').style.display=m==='m'?'block':'none';
+  document.getElementById('mode-a').style.display=m==='a'?'block':'none';
+  document.getElementById('bm').classList.toggle('on',m==='m');
+  document.getElementById('ba').classList.toggle('on',m==='a');
+}
+
+// Simulate extractor
+function showComp(n){
+  const el=document.getElementById('cr'+n);
+  if(el)el.style.display='block';
+}
+function integrate(){document.getElementById('int-msg').style.display='block';}
+
+// My listing extractor
+function extractMyListing(){
+  const url=document.getElementById('my-url').value.trim();
+  if(!url)return;
+  document.getElementById('f-title').value='Casa moderna con alberca en Querétaro Centro';
+  document.getElementById('f-bed').value='2';
+  document.getElementById('f-guests').value='4';
+  document.getElementById('f-beds').value='3';
+  document.getElementById('f-cp').value='76000 — Centro, Querétaro';
+  document.getElementById('success-msg').classList.add('show');
+}
+
+// Month range
+const MN=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const TMP={1:'Baja',2:'Baja',3:'Media',4:'Media',5:'Media-Alta',6:'Alta',7:'Alta',8:'Alta',9:'Media',10:'Media',11:'Baja-Media',12:'Alta'};
+function calcMeses(){
+  const d=parseInt(document.getElementById('mes-de').value);
+  const a=parseInt(document.getElementById('mes-a').value);
+  const c=a>=d?(a-d+1):(12-d+a+1);
+  const ts=[];
+  for(let i=0;i<c;i++){const m=((d-1+i)%12)+1;if(!ts.includes(TMP[m]))ts.push(TMP[m]);}
+  document.getElementById('mes-result').innerHTML='Rango: <strong>'+MN[d]+' → '+MN[a]+'</strong> ('+c+' mes'+(c>1?'es':'')+') — Temporada: <span style="font-weight:600;color:#D97706;">'+ts.join(' / ')+'</span>';
+}
+calcMeses();
+
+// Day toggle
+const activeDays=[];
+function togDay(el,day,mult){
+  const i=activeDays.indexOf(day);
+  if(i>-1){activeDays.splice(i,1);el.classList.remove('on');}
+  else{activeDays.push(day);el.classList.add('on');}
+  const cells=document.querySelectorAll('.day-cell.on');
+  const mults=[...cells].map(c=>parseFloat(c.querySelector('.dmult').textContent.replace('×','')));
+  const hasWe=[...cells].some(c=>c.classList.contains('we'));
+  const hasWd=[...cells].some(c=>!c.classList.contains('we'));
+  let note='';
+  if(hasWe&&hasWd)note='Selección mixta: Airbnb aplica ×1.35–1.45 en Vie/Sáb y ×1.0–1.10 entre semana — precio varía noche por noche.';
+  else if(hasWe)note='Solo fin de semana: Airbnb aplica el multiplicador máximo noche por noche (×1.35 Vie, ×1.45 Sáb).';
+  else if(mults.length)note='Días entre semana: multiplicador base (×1.0–1.10). Sin impacto de fin de semana.';
+  else note='Selecciona al menos un día para ver el multiplicador.';
+  document.getElementById('day-note').textContent=note;
+}
+
+// Price context
+const PX={base:['$1,050','$850','$1,380','$22,050','$22,050','$264,600'],we:['$1,420','$1,100','$1,750','$29,820','$29,820','$357,840'],hi:['$1,970','$1,500','$2,500','$41,370','$41,370','$496,440'],ev:['$2,630','$1,900','$3,200','$55,230','$55,230','$662,760'],lo:['$735','$600','$980','$15,435','$15,435','$185,220']};
+function setCtx(btn,k){
+  document.querySelectorAll('.ctx-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const v=PX[k];
+  ['pp1','pp2','pp3','pp4','pm','pa'].forEach((id,i)=>{document.getElementById(id).textContent=v[i];});
+}
+
+// Copy text
+function copyText(id){
+  const txt=document.getElementById(id).innerText;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector(`[onclick="copyText('${id}')"]`);
+    btn.textContent='¡Copiado!';
+    setTimeout(()=>btn.textContent='Copiar',2000);
+  });
+}
+</script>
+</body>
+</html>
